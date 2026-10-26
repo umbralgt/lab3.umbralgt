@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>( UMBRAL ) — Lab 3 · Finanzas e Inversión</title>
+<meta name="description" content="Herramientas para contrastar números, riesgo y decisiones financieras en Guatemala. Sin venta. Sin comisiones.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Sistema visual UMBRAL (Lab 1 y Lab 2): blanco y negro, líneas de 1.5px, azul como único acento */
+:root{
+  --negro:#0a0a0a; --blanco:#ffffff; --suelo:#f4f4f2; --g200:#efefef; --g300:#e3e3e3; --g400:#cfcfcf; --g600:#6b6b6b; --azul:#2f5bd3;
+  --linea:1.5px solid var(--negro); --suave:1px solid var(--g300);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --negro:#f2f2f0; --blanco:#111111; --suelo:#1a1a1a; --g200:#262626; --g300:#333333; --g400:#4a4a4a; --g600:#a3a3a3; --azul:#7f9ff0; }
+}
+:root[data-theme="dark"]{ --negro:#f2f2f0; --blanco:#111111; --suelo:#1a1a1a; --g200:#262626; --g300:#333333; --g400:#4a4a4a; --g600:#a3a3a3; --azul:#7f9ff0; }
+*,*::before,*::after{box-sizing:inherit;margin:0;padding:0}
+html{scroll-padding-top:calc(54px + env(safe-area-inset-top,0px))}
+body{background:var(--blanco);color:var(--negro);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+
+#nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;height:54px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--blanco);border-bottom:var(--linea)}
+#nav .logo{font-size:13px;font-weight:700;letter-spacing:.02em;text-decoration:none;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+#nav .mods{display:flex;gap:4px;flex:1;justify-content:center}
+#nav .mod{padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--g600);border-radius:6px;text-decoration:none}
+#nav .mod:hover{color:var(--negro);background:var(--g200)}
+#nav .volver{flex:none;margin-left:auto;padding:8px 14px;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:500;border-radius:8px;text-decoration:none;white-space:nowrap}
+@media (max-width:560px){#nav .mods{display:none}#nav{padding:0 14px;gap:8px}}
+
+main{max-width:980px;margin:0 auto;padding:56px 20px 24px}
+.ceja{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:16px}
+h1{font-size:clamp(2.2rem,6vw,3.6rem);line-height:1.05;letter-spacing:-.035em;font-weight:700;max-width:16ch;margin-bottom:20px}
+.bajada{font-size:1.15rem;max-width:56ch;color:var(--negro)}
+.bajada span{display:block;color:var(--g600)}
+.intro-esc{max-width:62ch}
+.intro-esc p{margin-bottom:8px}
+.suave{color:var(--g600)}
+.chico-h{font-size:.92rem;max-width:62ch}
+.esc{list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;margin-top:16px}
+.esc li{display:flex;gap:12px;padding:14px;border:var(--linea);border-radius:10px}
+.esc li.luego{border:var(--suave)}
+.esc li.luego .n{background:var(--blanco);color:var(--g600);border:1.5px solid var(--g400)}
+.esc .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.esc b{display:block;font-size:.98rem;letter-spacing:-.01em}
+.esc p{font-size:.88rem;color:var(--g600);margin-top:2px}
+.temas{display:flex;flex-wrap:wrap;gap:8px;margin-top:28px}
+.tema{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border:var(--linea);border-radius:8px;font-size:13px;font-weight:600}
+.tema b{font-weight:400}
+
+h2{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin:64px 0 14px;padding-bottom:8px;border-bottom:var(--suave)}
+.modulos{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px}
+.modulo{display:flex;flex-direction:column;gap:10px;padding:20px;border:var(--linea);border-radius:10px;text-decoration:none;background:var(--blanco);transition:background .15s}
+.modulo:hover{background:var(--suelo)}
+.modulo .glifo{font-size:22px;line-height:1}
+.modulo h3{font-size:1.2rem;letter-spacing:-.02em}
+.modulo p{font-size:.95rem;color:var(--g600);flex:1}
+.estado{display:inline-flex;align-items:center;gap:7px;font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.estado::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--negro)}
+
+.nota-lab{margin-top:48px;border:var(--linea);border-radius:10px;padding:18px 20px;max-width:720px}
+.nota-lab b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+.nota-lab p{font-size:.95rem}
+
+footer{background:#0a0a0a;padding:28px 20px;margin-top:64px}
+.pie-in{max-width:940px;margin:0 auto}
+footer .lema{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.02em;margin-bottom:6px}
+footer .per{font-size:12px;color:#777;font-style:italic;margin-bottom:20px}
+.pie-fila{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid #1e1e1e}
+.pie-fila span{font-size:11px;color:#777;font-weight:500}
+.pie-fila a{display:inline-flex;gap:8px;padding:7px 14px;background:#fff;color:#0a0a0a;font-size:11px;font-weight:500;border-radius:8px;text-decoration:none}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<nav id="nav" aria-label="Laboratorio 3">
+  <a class="logo" href="https://lab3.umbralgt.com">( U ) &nbsp; Lab 3 · Finanzas e Inversión</a>
+  <div class="mods"><a class="mod" href="https://escalera-financiera.umbralgt.com">Escalera financiera</a></div>
+  <a class="volver" href="https://www.umbralgt.com">← umbralgt.com</a>
+</nav>
+
+<main>
+  <p class="ceja">Laboratorio 3 · Ciudad de Guatemala · 2026</p>
+  <h1>Números, riesgo y decisiones, sin enfoque comercial.</h1>
+  <p class="bajada">Herramientas para ver deudas, ahorro y riesgo en quetzales y en tiempo.
+    <span>Sin venta. Sin comisiones. Sin recomendar productos.</span></p>
+  <h2>La escalera</h2>
+  <div class="intro-esc">
+    <p>Este laboratorio ordena las finanzas personales como una escalera. Cada peldaño se apoya en el anterior: no conviene invertir si el mes no alcanza, ni enfrentar deudas caras sin un pequeño fondo para emergencias.</p>
+    <p class="suave">No se trata de subir rápido, sino de no saltarse peldaños.</p>
+  </div>
+  <ol class="esc" aria-label="Los peldaños de la escalera">
+    <li><span class="n">1</span><div><b>Ordenar el día a día</b><p>Que el mes alcance: lo que entra cubre lo que sale.</p></div></li>
+    <li><span class="n">2</span><div><b>Fondo de emergencia inicial</b><p>Al menos un mes de gastos guardado para imprevistos.</p></div></li>
+    <li><span class="n">3</span><div><b>Deudas</b><p>Estar al día y sin deudas caras.</p></div></li>
+    <li><span class="n">4</span><div><b>Protección</b><p>De 3 a 6 meses de gastos guardados y seguro médico.</p></div></li>
+    <li><span class="n">5</span><div><b>Metas</b><p>Ahorro para el futuro, como el retiro.</p></div></li>
+    <li><span class="n">6</span><div><b>Inversión conservadora</b><p>Hacer crecer lo que sobra, con poco riesgo.</p></div></li>
+    <li class="luego"><span class="n">7</span><div><b>Bienes raíces</b><p>Vivienda y patrimonio, de la mano del <a href="http://lab1.umbralgt.com">Lab 1 · Bienes Raíces</a>.</p></div></li>
+    <li class="luego"><span class="n">8</span><div><b>Conexión con los otros labs</b><p>Arquitectura, arte y visión social, vistas desde las finanzas.</p></div></li>
+  </ol>
+  <p class="suave chico-h" style="margin-top:12px">La Escalera financiera es el punto de partida: te dice en qué peldaño estás. Las próximas herramientas del laboratorio se irán sumando a cada peldaño.</p>
+
+  <h2>Módulos disponibles</h2>
+  <div class="modulos">
+    <a class="modulo" href="https://escalera-financiera.umbralgt.com">
+      <span class="glifo" aria-hidden="true">⬡</span>
+      <h3>Escalera financiera</h3>
+      <p>Un recorrido de unos 5 minutos, con preguntas que se ajustan a tu situación. Al final ves tus números, en qué peldaño de la escalera estás y por qué, y un siguiente paso concreto.</p>
+      <span class="estado">En vivo</span>
+    </a>
+  </div>
+
+  <div class="nota-lab">
+    <b>Nota de laboratorio</b>
+    <p>Estas herramientas son para explorar, ordenar ideas y llegar mejor preparado, no para reemplazar a tu banco, a un contador o a un abogado. Para decisiones formales, la palabra final la tienen los profesionales y las instituciones correspondientes.</p>
+  </div>
+</main>
+
+<footer>
+  <div class="pie-in">
+    <p class="lema">explorar. contrastar. decidir.</p>
+    <p class="per">Per experimentum.</p>
+    <div class="pie-fila"><span>( UMBRAL ) · Un experimento 2025–2027 · Ciudad de Guatemala</span>
+      <a href="https://www.umbralgt.com" target="_blank" rel="noopener"><span>umbralgt.com</span><span aria-hidden="true">↗</span></a></div>
+  </div>
+</footer>
+</body>
+</html>
