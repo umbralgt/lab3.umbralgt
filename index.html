@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8">
+<meta name="color-scheme" content="light">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>( UMBRAL ) — Lab 3 · Finanzas e Inversión</title>
 <meta name="description" content="Herramientas para contrastar números, riesgo y decisiones financieras en Guatemala. Sin venta. Sin comisiones.">
@@ -15,10 +16,6 @@
   --linea:1.5px solid var(--negro); --suave:1px solid var(--g300);
   box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
 }
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){ --negro:#f2f2f0; --blanco:#111111; --suelo:#1a1a1a; --g200:#262626; --g300:#333333; --g400:#4a4a4a; --g600:#a3a3a3; --azul:#7f9ff0; }
-}
-:root[data-theme="dark"]{ --negro:#f2f2f0; --blanco:#111111; --suelo:#1a1a1a; --g200:#262626; --g300:#333333; --g400:#4a4a4a; --g600:#a3a3a3; --azul:#7f9ff0; }
 *,*::before,*::after{box-sizing:inherit;margin:0;padding:0}
 html{scroll-padding-top:calc(54px + env(safe-area-inset-top,0px))}
 body{background:var(--blanco);color:var(--negro);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;font-size:16px;line-height:1.55;-webkit-font-smoothing:antialiased}
