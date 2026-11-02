@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Escalera financiera · Lab 3 · UMBRAL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Sistema visual UMBRAL (Lab 1 y Lab 2). Color: blanco y negro de base; azul #2f5bd3 como único acento;
+   verde, ámbar y rojo solo para el semáforo y los errores, siempre en tinte suave (igual que .traffic-* de Lab 1);
+   otros colores (morado, naranja, verde de mapa) solo para distinguir categorías de datos, como las capas de Lab 1. */
+:root{
+  --negro:#0a0a0a; --blanco:#ffffff; --suelo:#f4f4f2; --g200:#efefef; --g300:#e3e3e3; --g400:#cfcfcf; --g600:#6b6b6b;
+  --azul:#2f5bd3; --azul-claro:#eef2fc;
+  --verde:#1f7a3b; --verde-claro:#e7f6ec; --ambar:#c79200; --ambar-claro:#fff7da; --rojo:#c0392b; --rojo-claro:#ffe3e3;
+  --linea:1.5px solid var(--negro); --suave:1px solid var(--g300);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(54px + env(safe-area-inset-top,0px))}
+body{margin:0;background:var(--blanco);color:var(--negro);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--negro)}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+
+/* Barra de navegación, igual a Lab 1 y Lab 2 */
+#nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;height:54px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--blanco);border-bottom:var(--linea)}
+#nav .logo{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--negro);text-decoration:none;white-space:nowrap}
+#nav .mods{display:flex;gap:4px;flex:1;justify-content:center}
+#nav .mod{padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--g600);border-radius:6px;text-decoration:none}
+#nav .mod.activo{color:var(--negro);background:var(--g200)}
+#nav .volver{margin-left:auto;display:inline-flex;gap:8px;padding:8px 14px;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:500;border-radius:8px;text-decoration:none;white-space:nowrap}
+#nav .logo{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#nav .volver{flex:none}
+@media (max-width:560px){#nav .mods{display:none}#nav{padding:0 14px;gap:8px}#nav .volver{padding:8px 12px}}
+
+main{max-width:680px;margin:0 auto;padding:28px 20px 48px}
+.ceja{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin:0 0 10px}
+h1{font-size:2.1rem;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:0 0 14px}
+h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:36px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--g300)}
+h3{font-size:1rem;font-weight:700;margin:0 0 6px}
+p{margin:0 0 14px}
+.suave{color:var(--g600)}
+.chico{font-size:.88rem;line-height:1.5}
+.nota-lab{border:var(--linea);border-radius:8px;padding:14px 16px;margin:20px 0}
+.nota-lab b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.aviso{background:var(--ambar-claro);border:1.5px solid var(--ambar);border-radius:8px;padding:10px 14px;font-size:.85rem;color:var(--ambar);margin:0 0 20px}
+.aviso strong{font-weight:700}
+.btn{display:block;width:100%;padding:13px;border:var(--linea);border-radius:8px;background:var(--negro);color:var(--blanco);font-size:15px;font-weight:700;text-align:center}
+.btn:hover{opacity:.88}
+.btn.sec{background:var(--blanco);color:var(--negro)}
+.btn.sec:hover{background:var(--g200);opacity:1}
+.enlace{background:none;border:0;padding:4px 0;color:var(--negro);text-decoration:underline;text-underline-offset:3px;font-size:.95rem}
+.fila{display:flex;gap:10px;margin-top:20px}
+.fila .btn{flex:1}
+
+/* Pregunta */
+.avance{height:4px;background:var(--g300);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.avance i{display:block;height:100%;background:var(--negro);transition:width .3s}
+.bloque{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:24px}
+.pregunta{font-size:1.55rem;line-height:1.25;letter-spacing:-.02em;font-weight:700;margin:0 0 8px}
+.opciones{display:grid;gap:8px;margin-top:20px}
+.op{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border-radius:8px;border:1.5px solid var(--g400);background:var(--blanco);font-size:1rem;font-weight:500}
+.op:hover{border-color:var(--negro)}
+.op[aria-pressed="true"]{border-color:var(--negro);background:var(--negro);color:var(--blanco)}
+.op .caja{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor}
+.op.multi .caja{border-radius:4px}
+.op[aria-pressed="true"] .caja{background:var(--blanco);box-shadow:inset 0 0 0 3px var(--negro)}
+.monto{display:flex;align-items:center;border:1px solid var(--g400);border-radius:8px;background:var(--suelo);margin-top:20px}
+.monto:focus-within{border-color:var(--negro);background:var(--blanco);box-shadow:0 0 0 1px var(--negro)}
+.monto span{padding:0 2px 0 16px;font-size:1.5rem;font-weight:700;color:var(--g600)}
+.monto input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:1.5rem;font-weight:700;padding:12px 16px 12px 4px;color:var(--negro)}
+.monto input:focus{outline:none}
+.unidad{display:flex;gap:8px;margin-top:10px}
+.unidad .op{flex:1;justify-content:center;padding:10px}
+.nose{margin-top:10px}
+.ayuda{margin-top:16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.help-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--negro);background:var(--blanco);font-size:12px;font-weight:700;color:var(--negro);padding:0;line-height:1}
+.help-icon:hover,.help-icon[aria-expanded="true"]{background:var(--negro);color:var(--blanco)}
+.help-lbl{font-size:.9rem;color:var(--g600)}
+.help-bubble{flex-basis:100%;background:var(--blanco);border:1.5px solid var(--negro);border-radius:10px;padding:12px 14px;font-size:.92rem;line-height:1.65;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.error{color:var(--rojo);font-size:.95rem;margin-top:8px;min-height:1.4rem}
+
+/* Escalera */
+.lugar{font-size:2rem;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:4px 0 8px}
+.escalera{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column-reverse}
+.peldano{display:flex;align-items:center;gap:14px;padding:7px 0}
+.peldano .travesano{flex:none;width:72px;height:12px;border:1.5px solid var(--g400);border-radius:2px;position:relative}
+.peldano .travesano::before,.peldano .travesano::after{content:"";position:absolute;top:-10px;bottom:-10px;width:1.5px;background:var(--g400)}
+.peldano .travesano::before{left:-1.5px}.peldano .travesano::after{right:-1.5px}
+.peldano.hecho .travesano{background:var(--negro);border-color:var(--negro)}
+.peldano.aqui .travesano{background:var(--azul);border-color:var(--azul);height:16px}
+.peldano .nombre{font-size:.95rem;color:var(--g600)}
+.peldano.hecho .nombre{color:var(--negro)}
+.peldano.aqui .nombre{color:var(--azul);font-weight:700}
+.peldano.lejos{opacity:.55}
+
+/* Tropiezo */
+.tropiezo{border:var(--linea);border-radius:10px;padding:16px;margin-top:12px}
+/* Semáforo como el traffic-box de Lab 1: tinte suave, borde del mismo tono, sin mayúsculas */
+.semaforo{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:3px 10px;border-radius:6px;border:1.5px solid}
+.semaforo::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.semaforo.verde{color:var(--verde);background:var(--verde-claro)}
+.semaforo.amarillo{color:var(--ambar);background:var(--ambar-claro)}
+.semaforo.rojo{color:var(--rojo);background:var(--rojo-claro)}
+.cifra{font-size:1.8rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin:10px 0 6px}
+.pestanas{display:flex;gap:0;border:var(--linea);border-radius:8px;overflow:hidden;width:fit-content;margin:4px 0 14px}
+.pestanas .op{border:0;border-radius:0;padding:8px 14px;font-size:12px;font-weight:700}
+.pestanas .op .caja{display:none}
+.compara{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.compara div{background:var(--suelo);border:var(--suave);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.compara b{display:block;font-size:1.2rem;letter-spacing:-.02em}
+.calma{background:var(--suelo);border:var(--linea);border-radius:10px;padding:16px;margin-top:20px}
+
+/* Hallazgos */
+.hallazgo{border:var(--suave);border-radius:10px;padding:16px;margin-top:10px}
+.familia{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:6px}
+.hallazgo .vimos{font-weight:700;font-size:1.08rem;letter-spacing:-.01em;margin-bottom:8px}
+.de100{border-left:3px solid var(--azul);background:var(--azul-claro);padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0}
+.paso{margin-top:10px}
+.nota{font-size:.85rem;color:var(--g600);margin-top:8px}
+.pie{font-size:.8rem;color:var(--g600);border-top:var(--suave);margin-top:12px;padding-top:8px}
+.marca-verif{display:inline-block;font-size:12px;font-weight:700;border:1.5px solid var(--ambar);color:var(--ambar);background:var(--ambar-claro);padding:2px 8px;border-radius:6px;margin-top:8px}
+
+/* Cómo funciona */
+.tabla{overflow-x:auto;margin:12px 0;border:var(--suave);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.82rem;min-width:30rem}
+th,td{text-align:left;padding:7px 9px;border-bottom:var(--suave);vertical-align:top}
+th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--g600)}
+
+footer{background:#0a0a0a;padding:28px 20px;margin-top:48px}
+.pie-in{max-width:680px;margin:0 auto}
+footer .lema{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.02em;margin:0 0 6px}
+footer .per{font-size:12px;color:#777;font-style:italic;margin:0 0 20px}
+.pie-fila{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid #1e1e1e}
+.pie-fila span{font-size:11px;color:#777;font-weight:500}
+.pie-fila a{display:inline-flex;gap:8px;padding:7px 14px;background:#fff;color:#0a0a0a;font-size:11px;font-weight:500;border-radius:8px;text-decoration:none}
+
+/* v1.1: ajustes de la primera prueba con usuario */
+.porque{background:var(--suelo);border-left:3px solid var(--azul);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.92rem;margin:10px 0 0}
+.term{display:inline;background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:help}
+.def{display:block;background:var(--blanco);color:var(--negro);border:1.5px solid var(--negro);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:.92rem;font-weight:400;line-height:1.55;letter-spacing:0;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.def b{font-weight:700}
+.term[aria-expanded="true"]{background:var(--azul-claro)}
+.explica{border:1.5px solid var(--negro);border-radius:10px;padding:12px 14px;margin-top:12px}
+.explica b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.explica p{margin:0}
+.desglose{display:grid;gap:8px;margin-top:20px}
+.fila-gasto{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.fila-gasto .lbl{flex:1;font-weight:600;font-size:.98rem;line-height:1.3}
+.fila-gasto small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.chico-monto{margin-top:0;width:9rem;flex:none}
+.chico-monto span{font-size:1rem;padding-left:12px}
+.chico-monto input{font-size:1.05rem;padding:9px 10px 9px 2px}
+.total-gasto{display:flex;justify-content:space-between;border-top:var(--linea);padding-top:10px;margin-top:4px;font-weight:700}
+.resumen{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.dato{border:var(--suave);border-radius:10px;padding:12px}
+.dato span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600)}
+.dato b{display:block;font-size:1.35rem;letter-spacing:-.02em}
+.dato small{display:block;font-size:.78rem;color:var(--g600);line-height:1.35}
+.pasos-esc{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
+.paso-esc{display:flex;gap:12px;padding:12px;border:var(--suave);border-radius:10px}
+.paso-esc .marca{flex:none;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:1.5px solid var(--g400);color:var(--g600)}
+.paso-esc.cumple .marca{background:var(--negro);color:var(--blanco);border-color:var(--negro)}
+.paso-esc.aqui{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.paso-esc.aqui .marca{border-color:var(--azul);color:var(--azul)}
+.paso-esc.despues{opacity:.7}
+.paso-esc p{margin:4px 0 0;font-size:.93rem}
+.etq{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin:12px 0 2px}
+.hallazgo .vimos{margin-bottom:4px}
+.siguiente{border:var(--linea);border-radius:10px;padding:16px}
+.siguiente .etq{margin-top:0}
+.sig-texto{font-size:1.25rem;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.mini-esc{margin:0 0 14px;padding:0;list-style:none;counter-reset:p;display:grid;gap:6px}
+.mini-esc li{counter-increment:p;display:flex;gap:10px;align-items:baseline;font-size:.95rem;color:var(--g600)}
+.mini-esc li::before{content:counter(p);flex:none;width:22px;height:22px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transform:translateY(4px)}
+.mini-esc b{color:var(--negro)}
+
+/* v1.2: segunda prueba con usuario */
+.breve{border:var(--linea);border-radius:10px;padding:16px;margin-top:4px}
+.breve:focus{outline:none}
+.breve .lugar{font-size:1.6rem}
+.breve .siguiente{margin-top:14px;background:var(--azul-claro);border:1.5px solid var(--azul)}
+.bloque-r{border:var(--linea);border-radius:10px;margin-top:10px}
+.bloque-r summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.bloque-r summary::-webkit-details-marker{display:none}
+.bloque-r .num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.bloque-r .tit{flex:1}
+.bloque-r .tit b{display:block;font-size:1.02rem;letter-spacing:-.01em}
+.bloque-r .tit small{display:block;color:var(--g600);font-size:.85rem;line-height:1.4}
+.bloque-r .flecha{font-size:1.4rem;transition:transform .2s}
+.bloque-r[open] .flecha{transform:rotate(90deg)}
+.bloque-c{padding:0 16px 16px}
+.nivel{border:var(--suave);border-radius:10px;padding:12px;margin-top:8px}
+.nivel-cab{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.nv{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;border:1.5px solid}
+.nv-riesgo{color:var(--rojo);background:var(--rojo-claro)}
+.nv-minimo{color:var(--ambar);background:var(--ambar-claro)}
+.nv-bien,.nv-ideal{color:var(--verde);background:var(--verde-claro)}
+.nivel-dato{margin:6px 0 8px;font-size:.95rem}
+.barra{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.seg{height:8px;border-radius:2px;background:var(--g300)}
+.seg.lleno{border:0}
+.seg.lleno.nv-riesgo{background:var(--rojo)}.seg.lleno.nv-minimo{background:var(--ambar)}.seg.lleno.nv-bien,.seg.lleno.nv-ideal{background:var(--verde)}
+.barra-et{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:4px}
+.barra-et span{font-size:10px;color:var(--g600);line-height:1.2}
+.nivel-sig{font-size:.88rem;margin:8px 0 0}
+.grupo{margin-top:14px}
+.grupo>h3{margin-bottom:2px}
+
+/* v1.3 */
+.compara.tres{grid-template-columns:1fr}
+@media (min-width:520px){.compara.tres{grid-template-columns:repeat(3,1fr)}}
+.compara span{display:block;font-size:.85rem;color:var(--g600)}
+.nivel-sig{font-size:.9rem;margin:10px 0 0;background:var(--suelo);border-radius:8px;padding:8px 10px}
+.alerta{border:var(--suave);border-radius:10px;padding:14px;margin-top:10px}
+.alerta.marcada{border:1.5px solid var(--ambar)}
+.alerta h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.alerta .etq{margin-top:8px}
+.alerta p{margin-bottom:4px}
+.oculto{display:none!important}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+
+/* Lab 3 v1.0: puente a las herramientas */
+.puente{display:flex;align-items:center;gap:12px;border:var(--linea);border-radius:10px;padding:12px 14px;margin-top:8px;text-decoration:none;color:var(--negro);background:var(--blanco)}
+.puente:hover{background:var(--suelo)}
+.puente .bn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--negro);color:var(--blanco);font-weight:700;font-size:13px;display:inline-flex;align-items:center;justify-content:center}
+.puente.tuyo{border-color:var(--azul);background:var(--azul-claro)}.puente.tuyo .bn{background:var(--azul)}
+.puente span:nth-child(2){flex:1}.puente small{display:block;color:var(--g600);font-size:.85rem;line-height:1.35}
+.puente .flecha{font-size:1.3rem}
+.herr{margin-top:14px}
+</style>
+</head>
+<body>
+<nav id="nav" aria-label="Laboratorio 3">
+  <a class="logo" href="https://lab3.umbralgt.com/">( U ) &nbsp; Lab 3 · Finanzas e Inversión</a>
+  <div class="mods"><a class="mod activo" href="https://lab3.umbralgt.com/escalera/" aria-current="page">Escalera financiera</a><a class="mod" href="https://lab3.umbralgt.com/#herramientas">Herramientas</a></div>
+  <a class="volver" href="https://www.umbralgt.com">← umbralgt.com</a>
+</nav>
+<main id="app" aria-live="polite"></main>
+<footer>
+  <div class="pie-in">
+    <p class="lema">explorar. contrastar. decidir.</p>
+    <p class="per">Per experimentum.</p>
+    <div class="pie-fila"><span>( UMBRAL ) · Lab 3 · Finanzas e Inversión · Ciudad de Guatemala · 2025–2027</span>
+      <a href="https://www.umbralgt.com" target="_blank" rel="noopener"><span>umbralgt.com</span><span aria-hidden="true">↗</span></a></div>
+  </div>
+</footer>
+
+<script>window.UMBRAL_URLS = {"portada": "https://lab3.umbralgt.com/", "escalera": "https://lab3.umbralgt.com/escalera/", "mes": "https://lab3.umbralgt.com/mi-mes/", "fondo": "https://lab3.umbralgt.com/fondo/", "deudas": "https://lab3.umbralgt.com/deudas/", "proteccion": "https://lab3.umbralgt.com/proteccion/", "metas": "https://lab3.umbralgt.com/metas/", "inversion": "https://lab3.umbralgt.com/inversion/", "vivienda": "https://lab3.umbralgt.com/vivienda/", "resumen": "https://lab3.umbralgt.com/mi-escalera/", "datos": "https://lab3.umbralgt.com/datos/", "pro": "https://lab3.umbralgt.com/pro/", "lab1": "https://lab1.umbralgt.com", "lab2": "https://lab2.umbralgt.com"};</script>
+<script src="/fin-motor.js"></script>
+<script src="/comun.js"></script>
+
+<script>
+(function(){
+'use strict';
+const M = window.FinMotor;
+const $app = document.getElementById('app');
+if(!M){ $app.innerHTML = '<p class="aviso"><strong>Falta el archivo fin-motor.js.</strong> Debe estar en la misma carpeta que este HTML.</p>'; return; }
+const CLAVE = 'umbral-foto-financiera';
+const D = M.DATOS;
+const ESCALERA = ['Ordenar el día a día','Fondo de emergencia inicial','Deudas','Protección','Metas','Inversión conservadora','Bienes raíces','Conexión con los otros labs'];
+
+// ---------- Glosario: palabras que se explican al tocarlas ----------
+const GLOSARIO = [
+  [/tasa promedio anual de las tarjetas|tasa promedio/i, 'Tasa promedio de las tarjetas', 'El promedio de lo que cobran al año todas las tarjetas de crédito en quetzales en Guatemala, según la Superintendencia de Bancos (51.96% anual, unos 4.3% al mes). Tu tarjeta puede cobrar más o menos.'],
+  [/tu tasa/i, 'Tu tasa', 'La tasa que te cobra tu propia tarjeta. Aparece en tu estado de cuenta, casi siempre como porcentaje mensual. Si la multiplicás por 12, tenés la tasa anual.'],
+  [/tasas? de interés/i, 'Tasa de interés', 'Lo que te cobran por prestarte dinero, como porcentaje. Si es mensual, multiplicala por 12 para tener una idea del costo al año.'],
+  [/pago mínimo|el mínimo/i, 'Pago mínimo', 'La cantidad más baja que el banco acepta ese mes para no marcarte atraso. Pagar solo eso hace que la deuda dure mucho más y cueste más.'],
+  [/saldo/i, 'Saldo', 'Todo lo que debés hoy en la tarjeta, no solo lo que compraste este mes.'],
+  [/extrafinanciamiento/i, 'Extrafinanciamiento', 'Dinero extra que el banco te presta sobre tu tarjeta y que se paga en cuotas fijas, aparte del pago mínimo.'],
+  [/fondo de emergencia/i, 'Fondo de emergencia', 'Dinero guardado solo para imprevistos (una enfermedad, quedarte sin trabajo, una reparación urgente), que podés usar rápido sin pedir prestado.'],
+  [/subsidio/i, 'Subsidio del IGSS', 'Dinero que el IGSS paga mientras no podés trabajar por enfermedad o accidente.'],
+  [/pensión/i, 'Pensión', 'Pago mensual que recibís al retirarte si cumpliste los requisitos del IGSS (edad y número de cuotas).'],
+  [/\bIGSS\b/, 'IGSS', 'Instituto Guatemalteco de Seguridad Social. Si te lo descuentan, tenés atención médica, subsidio si te enfermás y, con suficientes cuotas, pensión.'],
+  [/planilla del IVA/i, 'Planilla del IVA', 'Lista de tus facturas con NIT que se presenta a la SAT en enero. Si te descuentan ISR, puede bajar lo que pagás.'],
+  [/\bISR\b/, 'ISR', 'Impuesto Sobre la Renta: el impuesto que se paga sobre lo que ganás.'],
+  [/Bonos? del Tesoro/i, 'Bonos del Tesoro', 'Un préstamo que le hacés al Gobierno de Guatemala a cambio de intereses. Para pequeños inversionistas empiezan en Q5,000.'],
+  [/plazo fijo/i, 'Plazo fijo', 'Dinero que dejás en el banco por un tiempo acordado a cambio de intereses. Normalmente no se puede sacar antes de esa fecha.'],
+  [/depósitos?/i, 'Depósito de ahorro', 'En este contexto, dinero que tenés guardado en un banco o cooperativa (cuenta de ahorro o plazo fijo) y que gana intereses. No es lo mismo que el depósito de tu salario.'],
+  [/multinivel/i, 'Multinivel', 'Negocio en el que se gana vendiendo productos y, sobre todo, reclutando a otras personas para que también vendan.'],
+  [/day trad\w*|trading/i, 'Trading', 'Comprar y vender inversiones muy seguido, a veces el mismo día, para intentar ganar con los cambios de precio.'],
+  [/apuestas deportivas|casinos? en línea|apuestas en línea/i, 'Apuestas en línea', 'Sitios o apps donde se apuesta dinero a resultados deportivos o a juegos de casino. Están diseñados para que, con el tiempo, la casa gane y el jugador pierda.'],
+  [/pirámides?|piramidales?/i, 'Pirámide', 'Esquema que paga a los primeros con el dinero de los nuevos. Cuando dejan de entrar personas, se cae y la mayoría pierde.'],
+  [/sector informal|informalidad/i, 'Sector informal', 'Trabajos sin contrato formal, por lo general sin IGSS ni prestaciones.'],
+  [/\bSIB\b/, 'SIB', 'Superintendencia de Bancos. Supervisa a bancos y otras entidades financieras y atiende quejas.'],
+  [/\bDIACO\b/, 'DIACO', 'Dirección de Atención y Asistencia al Consumidor. Publica la tabla de tasas de tarjetas por emisor y atiende quejas.'],
+  [/historial/i, 'Historial crediticio', 'Registro de cómo pagaste tus deudas con bancos y cooperativas. Lo revisan antes de prestarte.'],
+  [/convenio/i, 'Convenio de pago', 'Acuerdo por escrito con quien te prestó para pagar de otra forma, por ejemplo en más tiempo.'],
+  [/agente de bolsa/i, 'Agente de bolsa', 'Persona o empresa autorizada para comprar y vender inversiones a tu nombre.'],
+  [/rendimiento/i, 'Rendimiento', 'Lo que gana tu dinero en un tiempo, expresado como porcentaje.']
+];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function glosar(texto){
+  // Escapa y marca la primera aparición de cada término (una sola vez por bloque)
+  let html = esc(texto); const usados = new Set();
+  GLOSARIO.forEach((g, k) => {
+    if(usados.has(g[1])) return;
+    const re = new RegExp(g[0].source, g[0].flags.replace('g',''));
+    const m = html.match(re);
+    if(!m) return;
+    // evita marcar dentro de una etiqueta ya insertada
+    const antes = html.slice(0, m.index);
+    if((antes.match(/<span role="button"/g)||[]).length !== (antes.match(/<\/span>/g)||[]).length) return;
+    html = antes + `<span role="button" tabindex="0" class="term" data-g="${k}" aria-expanded="false">${m[0]}</span>` + html.slice(m.index + m[0].length);
+    usados.add(g[1]);
+  });
+  return html;
+}
+// Un <span role="button"> no corta la frase como un <button>; Enter y espacio también lo abren
+$app.addEventListener('keydown', e => { if((e.key==='Enter' || e.key===' ') && e.target.classList && e.target.classList.contains('term')){ e.preventDefault(); e.target.click(); } });
+$app.addEventListener('click', e => {
+  const b = e.target.closest('.term'); if(!b) return;
+  e.preventDefault();
+  const abierto = b.getAttribute('aria-expanded')==='true';
+  document.querySelectorAll('.def').forEach(d => d.remove());
+  document.querySelectorAll('.term[aria-expanded="true"]').forEach(x => x.setAttribute('aria-expanded','false'));
+  if(abierto) return;
+  const g = GLOSARIO[+b.dataset.g];
+  // La definición aparece debajo del párrafo, sin cortar la frase
+  const bloque = b.closest('p, li, .pregunta') || b;
+  bloque.insertAdjacentHTML('afterend', `<div class="def" role="note"><b>${esc(g[1])}.</b> ${esc(g[2])}</div>`);
+  b.setAttribute('aria-expanded','true');
+});
+
+// ---------- Preguntas ----------
+const SI_NO = [{v:true,l:'Sí'},{v:false,l:'No'}];
+const P = [
+  {id:'q_corazonada', bloque:'Antes de empezar', tipo:'opciones',
+    texto:'Si mañana necesitaras Q10,000 para una emergencia, ¿podrías cubrirlos?',
+    sub:'Respondé con lo primero que pienses. No hay respuesta correcta.',
+    opciones:[{v:'si',l:'Sí, sin problema'},{v:'dificil',l:'Sí, pero con dificultad'},{v:'no',l:'No'}]},
+
+  {id:'q_ingreso', bloque:'Tu mes', tipo:'monto',
+    texto:'¿Cuánto recibís al mes, ya con descuentos?',
+    sub:'Lo que te pagan por tu trabajo, en efectivo, por transferencia a tu cuenta o ambos. No es lo que tenés ahorrado. Si cambia cada mes, pensá en un mes normal.',
+    porque:'Es la base para ver cuánto te queda cada mes.',
+    ayuda:'Si te pagan por planilla, es lo que llega a tu cuenta cada mes (sumando quincenas). Si te pagan en efectivo, es lo que recibís en mano.'},
+  {id:'q_gastos', bloque:'Tu mes', tipo:'desglose',
+    texto:'¿Cuánto gastás al mes en lo básico?',
+    sub:'Contá lo que gastás aunque lo pagues con tarjeta. Lo que debés en la tarjeta y tus préstamos los preguntamos después, aparte.',
+    porque:'Junto con tu ingreso, muestra si el mes alcanza: el primer peldaño de la escalera.',
+    campos:[{k:'vivienda',l:'Vivienda',d:'Alquiler, mantenimiento. Si pagás un préstamo de casa, ponelo después en deudas.'},
+            {k:'comida',l:'Comida y súper'},{k:'transporte',l:'Transporte',d:'Gasolina, bus, parqueo.'},
+            {k:'servicios',l:'Servicios',d:'Luz, agua, teléfono, internet.'},{k:'estudios',l:'Colegios y estudios'},
+            {k:'otros',l:'Otros gastos fijos',d:'Salud, apoyo a tu familia, suscripciones.'}]},
+  {id:'q_unico', bloque:'Tu mes', tipo:'opciones', texto:'¿Tu ingreso es el único de tu hogar?', opciones:SI_NO,
+    porque:'Si nadie más aporta, un tropiezo pesa más y conviene un fondo de emergencia más grande.'},
+  {id:'q_igss', bloque:'Tu mes', tipo:'opciones', texto:'¿Te descuentan IGSS de tu salario?',
+    porque:'El IGSS cambia qué pasa si te enfermás y cómo será tu retiro.',
+    opciones:[{v:'si',l:'Sí'},{v:'no',l:'No'},{v:'nose',l:'No sé',
+      explica:'Si en tu boleta de pago no aparece "IGSS" o "cuota laboral", o no recibís boleta, lo más probable es que no estés afiliado. Vamos a seguir como si no lo estuvieras.'}],
+    ayuda:'Aparece en tu boleta de pago como "IGSS" o "cuota laboral". Si trabajás por tu cuenta o te pagan sin boleta, lo más probable es que no.'},
+  {id:'q_salario', bloque:'Tu mes', tipo:'monto', show:r=>r.q_igss==='si',
+    texto:'¿Cuál es tu salario mensual antes de descuentos?', sub:'El que tu patrono reporta al IGSS.',
+    porque:'El IGSS calcula con este número lo que recibirías si te enfermás.',
+    ayuda:'En tu boleta de pago aparece como "salario base" o "salario ordinario", antes de restar IGSS e ISR.'},
+  {id:'q_cuenta', bloque:'Tu mes', tipo:'opciones', texto:'¿Tenés una cuenta de ahorro en un banco o cooperativa?', opciones:SI_NO},
+
+  {id:'q_tiene_tc', bloque:'Tus deudas', tipo:'opciones', texto:'¿Tenés tarjeta de crédito?', opciones:SI_NO},
+  {id:'q_saldo_tc', bloque:'Tus deudas', tipo:'monto', show:r=>r.q_tiene_tc===true,
+    texto:'¿Cuánto debés hoy en todas tus tarjetas juntas?',
+    sub:'Es el saldo total, no el pago del mes.',
+    ayuda:'En tu estado de cuenta o en la app del banco aparece como "saldo actual" o "saldo total".'},
+  {id:'q_pago_tc', bloque:'Tus deudas', tipo:'opciones', show:r=>r.q_tiene_tc===true,
+    texto:'Normalmente, ¿cuánto pagás de tu tarjeta cada mes?',
+    porque:'Pagar solo el mínimo es una de las formas más caras de deber.',
+    opciones:[{v:'total',l:'Todo lo que debo'},{v:'mas',l:'Más del mínimo, pero no todo'},{v:'minimo',l:'El mínimo'},{v:'menos',l:'A veces menos del mínimo'}],
+    ayuda:'El pago mínimo es la cantidad más baja que el banco acepta ese mes. Pagar "todo" es pagar el saldo completo del estado de cuenta.'},
+  {id:'q_tasa_tc', bloque:'Tus deudas', tipo:'tasa', show:r=>r.q_tiene_tc===true,
+    texto:'¿Qué tasa de interés te cobra tu tarjeta?',
+    sub:'Si no la sabés, tocá "No sé". Es lo más normal.',
+    ayuda:'Aparece en tu estado de cuenta como "tasa de interés", casi siempre en porcentaje mensual (por ejemplo, 4.5% mensual).'},
+  {id:'q_cuotas_tc', bloque:'Tus deudas', tipo:'opciones', show:r=>r.q_tiene_tc===true,
+    texto:'¿Tenés compras en cuotas o un extrafinanciamiento en tu tarjeta?',
+    opciones:[{v:'si',l:'Sí'},{v:'no',l:'No'},{v:'nose',l:'No sé',
+      explica:'Un extrafinanciamiento es dinero extra que el banco te presta sobre tu tarjeta y se paga en cuotas fijas. Si en tu estado de cuenta ves una línea de "cuotas" o "extrafinanciamiento", tenés uno.'}]},
+  {id:'q_atrasos', bloque:'Tus deudas', tipo:'opciones',
+    texto:'En los últimos 12 meses, ¿cuántos pagos de tarjetas o préstamos se te atrasaron?',
+    porque:'Los atrasos quedan en tu historial y pueden cerrar puertas a créditos futuros.',
+    opciones:[{v:0,l:'Ninguno'},{v:1,l:'Uno'},{v:2,l:'Dos o más'}]},
+  {id:'q_cuotas_otras', bloque:'Tus deudas', tipo:'monto',
+    texto:'¿Cuánto pagás al mes en préstamos de banco o cooperativa?',
+    sub:'Préstamo personal, de carro o de vivienda. Sin contar la tarjeta. Si no tenés, escribí 0.'},
+  {id:'q_informal', bloque:'Tus deudas', tipo:'multi',
+    texto:'¿Tenés préstamos fuera de bancos y cooperativas?', sub:'Podés marcar varias.',
+    opciones:[{v:'prestamista',l:'Prestamista o "gota a gota"'},{v:'empeno',l:'Casa de empeño'},{v:'adelanto',l:'Adelanto en el trabajo'},{v:'familia',l:'Familia o amigos'},{v:'ninguno',l:'Ninguno',solo:true}]},
+
+  {id:'q_ahorro', bloque:'Tu fondo de emergencia', tipo:'monto',
+    texto:'¿Cuánto podrías juntar en menos de una semana sin pedir prestado?',
+    sub:'Ahorros en cuenta, en casa o en efectivo. Si no tenés, escribí 0.',
+    porque:'Es tu fondo de emergencia: lo que te protege si algo sale mal.'},
+  {id:'q_donde', bloque:'Tu fondo de emergencia', tipo:'opciones', show:r=>r.q_cuenta===true,
+    texto:'¿Dónde está la mayor parte de ese dinero?',
+    opciones:[{v:'cuenta',l:'En una cuenta o plazo fijo'},{v:'casa',l:'En casa'},{v:'repartido',l:'Repartido'}]},
+  {id:'q_seguro', bloque:'Tu fondo de emergencia', tipo:'opciones', texto:'¿Tenés seguro médico privado, tuyo o de tu empresa?',
+    porque:'Una emergencia médica es uno de los tropiezos más comunes y más caros.',
+    opciones:[{v:'si',l:'Sí'},{v:'no',l:'No'},{v:'nose',l:'No sé',
+      explica:'Si tu empresa te dio un carné de una aseguradora, o pagás una póliza de gastos médicos, tenés seguro privado. El IGSS no cuenta como seguro privado. Si no estás seguro, preguntá en tu trabajo.'}]},
+
+  {id:'q_edad', bloque:'Tu futuro', tipo:'numero', texto:'¿Cuántos años tenés?'},
+  {id:'q_retiro', bloque:'Tu futuro', tipo:'monto', texto:'¿Cuánto tenés ahorrado solo para tu retiro, aparte del IGSS?',
+    sub:'Si todavía nada, escribí 0.',
+    porque:'La pensión del IGSS tiene un máximo de Q7,200 al mes. Lo que ahorrés aparte se suma a eso.'},
+  {id:'q_huecos', bloque:'Tu futuro', tipo:'opciones', show:r=>r.q_igss==='si',
+    texto:'¿Has tenido meses sin cotizar al IGSS?', sub:'Por cambio de trabajo o contratos por servicios.',
+    porque:'La pensión pide 240 meses cotizados; cada mes sin cotizar la aleja.',
+    opciones:[{v:'si',l:'Sí'},{v:'no',l:'No'},{v:'nose',l:'No sé',
+      explica:'El IGSS puede decirte cuántas cuotas llevás. Si alguna vez trabajaste por contrato de servicios (con factura), esos meses normalmente no cuentan.'}]},
+  {id:'q_planilla', bloque:'Tu futuro', tipo:'opciones', show:r=>r.q_igss==='si',
+    texto:'¿Presentás la planilla del IVA en enero?',
+    porque:'Puede devolverte parte del ISR que te descuentan.',
+    opciones:[{v:'si',l:'Sí'},{v:'no',l:'No'},{v:'quees',l:'¿Qué es eso?',
+      explica:'Es una lista de las facturas con tu NIT de todo el año. Se presenta a la SAT en los primeros 10 días hábiles de enero, en la Agencia Virtual. Si te descuentan ISR, permite restar hasta Q12,000 de gastos y pagar menos impuesto. En tus resultados vas a ver cuánto podría significar para vos.'}]},
+
+  {id:'q_ofertas', bloque:'Ojo con esto', tipo:'multi',
+    texto:'En el último año, ¿te llegó alguna de estas ofertas, o participás en alguna?',
+    sub:'En Guatemala circulan ofertas que prometen ganar dinero fácil y que han hecho perder sus ahorros a miles de personas, con o sin estudios. No te preguntamos para juzgarte: al final te explicamos cómo reconocer cada una, la marques o no. Podés marcar varias.',
+    porque:'Estas ofertas no distinguen ingresos ni profesión: se aprovechan de la falta de información.',
+    opciones:[
+      {v:'rend2',l:'Que tu dinero gane mucho cada mes (por ejemplo, "te doy 5% o 10% mensual")'},
+      {v:'trading',l:'Un curso o grupo para ganar comprando y vendiendo inversiones en línea (trading)'},
+      {v:'mlm',l:'Vender productos y reclutar a otras personas para que también vendan (multinivel)'},
+      {v:'membresia',l:'Pagar una inscripción para ganar por tareas fáciles, como ver videos, dar "me gusta" o tareas por Telegram'},
+      {v:'falsos',l:'Una inversión anunciada en redes con videos de famosos, funcionarios o empresarios'},
+      {v:'apuestas',l:'Apuestas deportivas o casinos en línea'},
+      {v:'ninguna',l:'Ninguna',solo:true}]}
+];
+
+let r = {}; let pila = []; let i = 0; let vista = 'inicio'; let escenarioB = 'sinTrabajo';
+const visibles = () => P.filter(p => !p.show || p.show(r));
+const Q = n => M.fmtQ(n);
+
+function guardar(){ try{ localStorage.setItem(CLAVE, JSON.stringify({r, fecha:new Date().toISOString()})); return true; }catch(e){ return false; } }
+function leer(){ try{ const t = localStorage.getItem(CLAVE); return t ? JSON.parse(t) : null; }catch(e){ return null; } }
+function borrar(){ try{ localStorage.removeItem(CLAVE); }catch(e){} }
+
+function limpiarDependientes(){
+  if(r.q_tiene_tc===false){ r.q_saldo_tc=null; r.q_pago_tc=null; r.q_tasa_tc=null; r.q_cuotas_tc=null; }
+  if(r.q_igss!=='si'){ r.q_salario=null; r.q_huecos=null; r.q_planilla=null; }
+  if(r.q_cuenta===false){ r.q_donde='casa'; }
+}
+
+// ---------- Inicio ----------
+function inicio(){
+  vista='inicio';
+  const previo = leer();
+  $app.innerHTML = `
+    <p class="ceja">Laboratorio 3 · Ciudad de Guatemala · 2026</p>
+    <h1>Escalera financiera</h1>
+    <p>Vas a responder entre 15 y 23 preguntas sobre tu mes, tus deudas y tu ahorro. El número depende de tu situación: por ejemplo, si no tenés tarjeta de crédito, no te preguntamos por ella. Toma unos 5 minutos.</p>
+    <p>En cada pregunta te contamos por qué importa. Al final vas a ver dónde estás, comparado con lo mínimo y con lo ideal, y un siguiente paso concreto.</p>
+    <h2>Cómo funciona la escalera</h2>
+    <p>Imaginá tus finanzas como una escalera. Cada peldaño se apoya en el anterior: no conviene invertir si el mes no alcanza, ni enfrentar deudas caras sin un pequeño fondo para emergencias.</p>
+    <ol class="mini-esc">
+      <li><span><b>Ordenar el día a día</b> · que el mes alcance</span></li>
+      <li><span><b>Fondo de emergencia inicial</b> · al menos un mes de gastos guardado</span></li>
+      <li><span><b>Deudas</b> · al día y sin deudas caras</span></li>
+      <li><span><b>Protección</b> · de 3 a 6 meses guardados y seguro médico</span></li>
+      <li><span><b>Metas</b> · ahorro para el futuro, como el retiro</span></li>
+      <li><span><b>Inversión conservadora</b> · hacer crecer lo que sobra</span></li>
+    </ol>
+    <p>Con tus respuestas vemos en qué peldaño estás, por qué, y qué te falta para subir al siguiente. No se trata de subir rápido, sino de no saltarse peldaños.</p>
+    <div class="nota-lab"><b>Nota de laboratorio</b><p class="chico" style="margin:0">${esc(M.AVISOS.entrada)}</p></div>
+    <button class="btn" id="empezar">Entiendo, empezar</button>
+    ${previo ? `<div class="fila"><button class="btn sec" id="previo">Ver mi resultado guardado</button></div>` : ''}
+    <p style="margin-top:20px"><button class="enlace" id="como">Cómo funciona y de dónde salen los datos</button></p>`;
+  document.getElementById('empezar').onclick = () => { r={}; pila=[]; i=0; pregunta(); };
+  if(previo) document.getElementById('previo').onclick = () => { r = previo.r; resultados(); };
+  document.getElementById('como').onclick = comoFunciona;
+}
+
+// ---------- Pregunta ----------
+function pregunta(){
+  vista='pregunta';
+  const lista = visibles(); const p = lista[i];
+  const pct = Math.round(i/lista.length*100);
+  const val = r[p.id];
+  let cuerpo = '';
+  if(p.tipo==='opciones'){
+    cuerpo = `<div class="opciones" role="group" aria-label="${esc(p.texto)}">${p.opciones.map((o,k)=>
+      `<button class="op" data-k="${k}" aria-pressed="${val===o.v}"><span class="caja"></span>${esc(o.l)}</button>`).join('')}</div>`;
+  } else if(p.tipo==='multi'){
+    const sel = Array.isArray(val) ? val : [];
+    cuerpo = `<div class="opciones" role="group" aria-label="${esc(p.texto)}">${p.opciones.map((o,k)=>
+      `<button class="op multi" data-k="${k}" aria-pressed="${sel.includes(o.v)}"><span class="caja"></span>${esc(o.l)}</button>`).join('')}</div>`;
+  } else if(p.tipo==='monto' || p.tipo==='numero'){
+    const v = (val===undefined || val===null) ? '' : val;
+    cuerpo = `<label class="monto">${p.tipo==='monto'?'<span>Q</span>':''}<input id="valor" inputmode="decimal" autocomplete="off" value="${v}" aria-label="${esc(p.texto)}" placeholder="${p.tipo==='monto'?'0':'Edad'}"></label>
+      ${p.tipo==='monto'?'<button class="enlace nose" id="nose">No sé</button>':''}`;
+  } else if(p.tipo==='tasa'){
+    const t = val || {unidad:'mensual'};
+    cuerpo = `<label class="monto"><input id="valor" inputmode="decimal" autocomplete="off" value="${t.v ?? ''}" aria-label="Tasa en porcentaje" placeholder="4.5" style="padding-left:16px"><span style="padding:0 16px 0 0">%</span></label>
+      <div class="unidad" role="group" aria-label="La tasa es"><button class="op" data-u="mensual" aria-pressed="${t.unidad==='mensual'}">Al mes</button><button class="op" data-u="anual" aria-pressed="${t.unidad==='anual'}">Al año</button></div>
+      <button class="enlace nose" id="nose">No sé</button>`;
+  } else if(p.tipo==='desglose'){
+    const det = r.q_gastos_det || {};
+    cuerpo = `<div class="desglose">${p.campos.map(c => `
+      <label class="fila-gasto"><span class="lbl">${esc(c.l)}${c.d?`<small>${esc(c.d)}</small>`:''}</span>
+        <span class="monto chico-monto"><span>Q</span><input inputmode="decimal" autocomplete="off" data-c="${c.k}" value="${det[c.k] ?? ''}" placeholder="0" aria-label="${esc(c.l)}"></span></label>`).join('')}
+      <div class="total-gasto"><span>Total al mes</span><b id="total">${Q(Object.values(det).reduce((a,b)=>a+(+b||0),0))}</b></div></div>
+      <button class="enlace nose" id="nose">No sé, prefiero poner un total aproximado</button>`;
+  }
+  $app.innerHTML = `
+    <div class="avance" role="progressbar" aria-valuenow="${pct}" aria-valuemin="0" aria-valuemax="100"><i style="width:${pct}%"></i></div>
+    <div class="bloque">${esc(p.bloque)} · ${i+1} de ${lista.length}</div>
+    <p class="pregunta" id="enunciado" tabindex="-1">${glosar(p.texto)}</p>
+    ${p.sub?`<p class="suave chico">${glosar(p.sub)}</p>`:''}
+    ${p.porque?`<p class="porque"><b>Por qué importa:</b> ${glosar(p.porque)}</p>`:''}
+    ${cuerpo}
+    <div class="error" id="error"></div>
+    <div id="explica"></div>
+    ${p.ayuda?`<div class="ayuda"><button class="help-icon" id="verAyuda" aria-expanded="false" aria-label="¿Dónde lo veo?">?</button><span class="help-lbl">¿Dónde lo veo?</span><div class="help-bubble oculto" id="ayuda">${esc(p.ayuda)}</div></div>`:''}
+    <div class="fila"><button class="btn sec" id="atras">Atrás</button><button class="btn" id="seguir">Seguir</button></div>`;
+  document.getElementById('enunciado').focus();
+
+  const err = m => document.getElementById('error').textContent = m;
+  const ayudaBtn = document.getElementById('verAyuda');
+  if(ayudaBtn) ayudaBtn.onclick = () => { const a = document.getElementById('ayuda'); a.classList.toggle('oculto'); ayudaBtn.setAttribute('aria-expanded', !a.classList.contains('oculto')); };
+
+  if(p.tipo==='opciones'){
+    $app.querySelectorAll('.op').forEach(b => b.onclick = () => {
+      const o = p.opciones[+b.dataset.k]; r[p.id] = o.v;
+      if(o.explica){
+        // La prueba mostró que "¿Qué es eso?" pasaba sin explicar: ahora se explica antes de seguir
+        $app.querySelectorAll('.op').forEach(x => x.setAttribute('aria-pressed', x===b));
+        document.getElementById('explica').innerHTML = `<div class="explica" role="status"><b>Te explicamos</b><p>${glosar(o.explica)}</p></div>`;
+        document.getElementById('seguir').focus();
+        return;
+      }
+      avanzar();
+    });
+  }
+  if(p.tipo==='multi'){
+    $app.querySelectorAll('.op').forEach(b => b.onclick = () => {
+      const o = p.opciones[+b.dataset.k]; let sel = Array.isArray(r[p.id]) ? r[p.id].slice() : [];
+      if(o.solo) sel = sel.includes(o.v) ? [] : [o.v];
+      else { sel = sel.filter(v => !p.opciones.find(x=>x.v===v && x.solo)); sel = sel.includes(o.v) ? sel.filter(v=>v!==o.v) : sel.concat(o.v); }
+      r[p.id] = sel; pregunta();
+    });
+  }
+  if(p.tipo==='tasa'){
+    $app.querySelectorAll('[data-u]').forEach(b => b.onclick = () => {
+      const t = Object.assign({}, r[p.id]||{}, {unidad:b.dataset.u}); const v = document.getElementById('valor').value;
+      if(v!=='') t.v = parseFloat(v.replace(',','.')); r[p.id] = t; pregunta();
+    });
+  }
+  if(p.tipo==='desglose'){
+    const leerDet = () => { const det = {}; $app.querySelectorAll('[data-c]').forEach(inp => { const n = Number(inp.value.replace(/[Q\s,]/g,'')); det[inp.dataset.c] = (inp.value.trim()==='' || !isFinite(n) || n<0) ? 0 : n; }); return det; };
+    $app.querySelectorAll('[data-c]').forEach(inp => inp.addEventListener('input', () => {
+      document.getElementById('total').textContent = Q(Object.values(leerDet()).reduce((a,b)=>a+b,0)); }));
+    document.getElementById('nose').onclick = () => {
+      // Alternativa: un solo total aproximado
+      $app.querySelector('.desglose').outerHTML = `<label class="monto"><span>Q</span><input id="valor" inputmode="decimal" autocomplete="off" placeholder="0" aria-label="Total aproximado de gastos básicos"></label>`;
+      document.getElementById('nose').remove(); p._total = true; document.getElementById('valor').focus();
+    };
+    p._leerDet = leerDet;
+  }
+  const nose = document.getElementById('nose'); if(nose && p.tipo!=='desglose') nose.onclick = () => { r[p.id] = null; avanzar(); };
+  const inp = document.getElementById('valor');
+  if(inp){ inp.addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('seguir').click(); }); }
+
+  document.getElementById('atras').onclick = () => { if(pila.length){ i = pila.pop(); pregunta(); } else inicio(); };
+  document.getElementById('seguir').onclick = () => {
+    if(p.tipo==='opciones'){ if(r[p.id]===undefined) return err('Elegí una opción.'); return avanzar(); }
+    if(p.tipo==='multi'){ if(!Array.isArray(r[p.id]) || !r[p.id].length) return err('Marcá al menos una opción.'); return avanzar(); }
+    if(p.tipo==='desglose' && !p._total){
+      const det = p._leerDet(); const total = Object.values(det).reduce((a,b)=>a+b,0);
+      if(total<=0) return err('Escribí al menos un gasto, o tocá la opción de total aproximado.');
+      r.q_gastos_det = det; r.q_gastos = total; return avanzar();
+    }
+    const el = document.getElementById('valor');
+    const txt = el.value.trim().replace(/[Q\s,]/g,'');
+    if(p.tipo==='tasa'){
+      if(txt===''){ if(r[p.id]===null) return avanzar(); return err('Escribí la tasa o tocá "No sé".'); }
+      const n = parseFloat(txt); if(!(n>0)) return err('Escribí un número mayor que cero.');
+      r[p.id] = {v:n, unidad:(r[p.id]&&r[p.id].unidad)||'mensual'}; return avanzar();
+    }
+    if(txt===''){ if(p.tipo==='monto' && r[p.id]===null) return avanzar(); return err(p.tipo==='numero'?'Escribí tu edad.':'Escribí una cantidad o tocá "No sé".'); }
+    const n = Number(txt);
+    if(!isFinite(n) || n<0) return err('Escribí solo números, sin signos.');
+    if(p.tipo==='numero' && (n<15 || n>100)) return err('Escribí una edad entre 15 y 100.');
+    if(p.tipo==='desglose'){ r.q_gastos_det = null; }
+    r[p.id] = n; avanzar();
+  };
+}
+
+function avanzar(){
+  limpiarDependientes();
+  const lista = visibles(); const actual = lista[i];
+  pila.push(i);
+  const nueva = visibles(); const pos = nueva.indexOf(actual);
+  i = pos + 1;
+  if(i >= nueva.length) resultados(); else pregunta();
+}
+
+// ---------- Resultados ----------
+function meses(m){
+  if(m===Infinity) return 'Tus gastos quedan cubiertos';
+  if(m < 1) return 'Menos de un mes';
+  const v = Math.floor(m*10)/10;
+  return (Number.isInteger(v)? v : v.toFixed(1)) + (v===1?' mes':' meses');
+}
+const SEM = {verde:'Verde', amarillo:'Amarillo', rojo:'Rojo'};
+
+function resumenHTML(s){
+  const celda = (t, v, nota) => `<div class="dato"><span>${t}</span><b>${v}</b>${nota?`<small>${nota}</small>`:''}</div>`;
+  const qq = v => v==null ? '—' : Q(v);
+  return `<div class="resumen">
+    ${celda('Recibís', qq(s.ingreso))}
+    ${celda('Gastos básicos', qq(s.gastos))}
+    ${celda('Pagos de deudas', qq(s.deudas), 'Préstamos y pago mínimo de tarjeta')}
+    ${celda(s.queda!=null && s.queda<0 ? 'Te faltan' : 'Te quedan', s.queda==null ? '—' : Q(Math.abs(s.queda)), 'al mes')}
+    ${celda('Tu fondo de emergencia', qq(s.ahorro), s.mesesAhorro!=null ? `alcanza para ${meses(s.mesesAhorro).toLowerCase()} de gastos` : '')}
+    ${celda('Para tu retiro', s.retiro==null ? '—' : Q(s.retiro), 'aparte del IGSS')}
+  </div>`;
+}
+
+function escaleraHTML(f){
+  const n = f.peldano;
+  const visual = ESCALERA.map((nom,k)=>{
+    const p = k+1, cls = p<n ? 'hecho' : p===n ? 'aqui' : p>6 ? 'lejos' : '';
+    return `<li class="peldano ${cls}"><span class="travesano"></span><span class="nombre">${p}. ${esc(nom)}${p===n?' · estás aquí':''}${p>6?' (próximamente)':''}</span></li>`;
+  }).join('');
+  const pasos = f.escalera.map(e => `
+    <li class="paso-esc ${e.estado}">
+      <span class="marca" aria-hidden="true">${e.estado==='cumple'?'✓':e.estado==='aqui'?'●':'○'}</span>
+      <div><b>${e.n}. ${esc(e.nombre)}</b>
+        <p>${e.estado==='despues' ? 'Pide: ' + esc(e.pide.charAt(0).toLowerCase() + e.pide.slice(1)) : glosar(e.por || e.pide)}</p>
+        ${e.estado==='aqui' && e.paso ? `<p class="para-subir"><b>Para subir:</b> ${glosar(e.paso)}</p>` : ''}
+      </div></li>`).join('');
+  return `
+    <p class="suave chico">Cada peldaño pide algo. Tu peldaño es el primero que todavía no cumplís. Así se calculó con tus números:</p>
+    <ol class="pasos-esc" aria-label="Escalera de salud financiera">${pasos}</ol>
+    <p class="suave chico" style="margin-top:10px">Después vienen 7. Bienes raíces y 8. Conexión con los otros labs (próximamente).</p>`;
+}
+
+function prestamoHTML(p){
+  if(!p) return '';
+  return `<div><span>Con un préstamo a 12 meses</span><b>${Q(p.cuota)} al mes</b>${Q(p.total)} en total</div>`;
+}
+function tarjetaA(A){
+  if(!A) return '<p class="suave">Falta tu ahorro para calcular este escenario.</p>';
+  let h = `<span class="semaforo ${A.semaforo||'amarillo'}">${SEM[A.semaforo]||'Por confirmar'}</span>`;
+  const tasaP = A.prestamo ? M.fmtPct(A.prestamo.tasaAnual) : '';
+  const notaP = A.prestamo ? `<p class="nota">El préstamo usa ${tasaP} anual, el promedio de los préstamos en Guatemala sin contar tarjetas (Banguat). Un préstamo personal suele cobrar más; pedí siempre el costo total en quetzales.</p>` : '';
+  if(A.faltante===0){
+    h += `<p class="cifra">Tu fondo de emergencia la cubre</p><p>Después de pagarla te quedarían ${Q(A.queda)}.</p>`;
+  } else if(A.sinTarjeta){
+    h += `<p class="cifra">Te faltarían ${Q(A.faltante)}</p><p>Tu fondo de emergencia cubre ${Q(A.cubre)}. El resto habría que conseguirlo prestado. Así se vería con un préstamo formal:</p>
+      <div class="compara">${prestamoHTML(A.prestamo)}</div>${notaP}
+      <p class="de100">De cada 100 guatemaltecos, ${D.findex_emergencia.v.familia} recurrirían a familia o amigos ante una emergencia.</p>`;
+  } else {
+    const cf = A.comparaFaltante, p = A.prestamo;
+    const tasaTxt = A.tasaPropia ? `tu tasa (${M.fmtPct(A.tasa,1)} al año)` : `la tasa promedio anual de las tarjetas (${M.fmtPct(D.tc_tasa_prom_mn.v)} al año, unos ${M.fmtPct(D.tc_tasa_prom_mn.v/12,1)} al mes)`;
+    h += `<p class="cifra">Te faltarían ${Q(A.faltante)}</p>
+      <p>${glosar(`Así se compara pagar esos ${Q(A.faltante)} con la tarjeta, a ${tasaTxt}, o con un préstamo:`)}</p>
+      <div class="compara tres">
+        <div><span>Tarjeta, pagando solo el mínimo</span><b>${M.fmtMeses(cf.minimo.meses)}</b>${Q(cf.minimo.totalPagado)} en total</div>
+        <div><span>Tarjeta, pagando ${Q(p.cuota)} al mes</span><b>${cf.mismaCuota.nunca?'No alcanza':M.fmtMeses(cf.mismaCuota.meses)}</b>${cf.mismaCuota.nunca?'La cuota no cubre los intereses':Q(cf.mismaCuota.totalPagado)+' en total'}</div>
+        <div><span>Préstamo a 12 meses</span><b>${Q(p.cuota)} al mes</b>${Q(p.total)} en total</div>
+      </div>
+      ${A.saldoTarjeta > A.faltante ? `<p>Si ese faltante se suma a lo que ya debés en la tarjeta (${Q(A.saldoTarjeta - A.faltante)}), pagando solo el mínimo tardarías ${M.fmtMeses(A.soloMinimo.meses)} y pagarías ${Q(A.soloMinimo.totalPagado)} en total.</p>` : ''}
+      <p class="nota">${esc(M.AVISOS.ilustrativo)} Sin compras nuevas, comisiones, seguros ni IVA sobre intereses.</p>${notaP}`;
+  }
+  return h;
+}
+
+function tarjetaB(B){
+  if(!B) return '<p class="suave">Faltan tu ahorro, tus gastos o tus pagos de deudas para calcular este escenario.</p>';
+  const v = B[escenarioB] || B.sinTrabajo;
+  return `<div class="pestanas" role="group" aria-label="Variante">
+      <button class="op" data-b="sinTrabajo" aria-pressed="${escenarioB==='sinTrabajo'}">Me quedo sin trabajo</button>
+      <button class="op" data-b="enfermedad" aria-pressed="${escenarioB==='enfermedad'}">Me enfermo</button></div>
+    <span class="semaforo ${v.semaforo}">${SEM[v.semaforo]}</span>
+    <p class="cifra">${meses(v.meses)}</p>
+    <p>${v.meses===Infinity ? 'Con el ingreso de este escenario alcanzarías a cubrir tus gastos y pagos de deudas.' : glosar(`Es lo que aguantarías con tu fondo de emergencia, pagando ${Q(v.necesidad)} al mes${v.ingreso>0?` y recibiendo unos ${Q(v.ingreso)} del IGSS el primer mes`:''}.`)}</p>
+    ${v.faltaVerde>0?`<p>Para llegar a Verde (3 meses) te faltan ${Q(v.faltaVerde)}.</p>`:''}
+    ${v.nota?`<p class="nota">${esc(v.nota)}</p>`:''}`;
+}
+
+function hallazgoHTML(h){
+  return `<article class="hallazgo">
+    <p class="etq">Lo que vimos</p><p class="vimos">${glosar(h.vimos)}</p>
+    <p class="etq">Qué significa</p><p>${glosar(h.cuesta)}</p>
+    ${h.dato100?`<p class="de100"><b>Un dato:</b> ${glosar(h.dato100)}</p>`:''}
+    <p class="etq">Un paso posible</p><p class="paso">${glosar(h.paso)}</p>
+    ${h.notaIlustrativo?`<p class="nota">${esc(h.notaIlustrativo)}${h.supuestos?' '+esc(h.supuestos):''}</p>`:''}
+    ${h.porVerificar?`<span class="marca-verif">Fuente secundaria</span><p class="nota">${esc(M.AVISOS.porVerificar)}</p>`:''}
+    <p class="pie">${esc(h.pie)}</p></article>`;
+}
+
+function nivelesHTML(niveles){
+  const ORD = M.NIVELES, NOM = M.NIVEL_NOMBRE;
+  return niveles.map(nv => {
+    const k = ORD.indexOf(nv.nivel);
+    return `<div class="nivel">
+      <div class="nivel-cab"><b>${esc(nv.titulo)}</b><span class="nv nv-${nv.nivel}">${NOM[nv.nivel]}</span></div>
+      <p class="nivel-dato">${esc(nv.dato)}</p>
+      <div class="barra" aria-hidden="true">${ORD.map((o,q)=>`<span class="seg ${q<=k?'lleno nv-'+nv.nivel:''} ${q===k?'aqui':''}"></span>`).join('')}</div>
+      <div class="barra-et" aria-hidden="true">${ORD.map(o=>`<span>${NOM[o]}</span>`).join('')}</div>
+      <div class="nivel-sig"><b>${k<3 ? 'Para subir a ' + NOM[ORD[k+1]].toLowerCase() : 'Para mantenerte'}:</b> ${glosar(nv.siguiente.charAt(0).toLowerCase()+nv.siguiente.slice(1))}</div>
+    </div>`;
+  }).join('');
+}
+
+function grupoHallazgos(hs){
+  const fams = []; hs.forEach(h => { if(!fams.includes(h.familia)) fams.push(h.familia); });
+  return fams.map(fm => { const del = hs.filter(h => h.familia===fm);
+    return `<section class="grupo"><h3>${esc(del[0].familiaNombre)}</h3><p class="suave chico">${esc(del[0].familiaExplica)}</p>${del.map(hallazgoHTML).join('')}</section>`; }).join('');
+}
+
+const ALERTAS = [
+  {k:'prestamista', marca:'q_informal', t:'Prestamistas y "gota a gota"',
+   que:'Préstamos en efectivo o por aplicación, rápidos y sin requisitos, que se cobran a diario o cada semana.',
+   senal:'No te dicen cuánto vas a pagar en total, los intereses crecen cada día y el cobro puede venir con presión, amenazas o mensajes a tus conocidos.',
+   hacer:'Pedí siempre el costo total en quetzales y por escrito, y no instalés aplicaciones de préstamo que pidan acceso a tus contactos. Si te amenazan, podés denunciar ante el Ministerio Público o llamar al 110 o al 1561.',
+   dato:'En diciembre de 2024, el MP y la PNC capturaron a 15 personas de una red de préstamos "gota a gota" acusada de usura y amenazas a deudores en varios departamentos.'},
+  {k:'lote', marca:'q_ninguna', t:'Lotes o casas con financiamiento de la lotificadora',
+   que:'Proyectos que venden un lote o una casa con su propio financiamiento: poco enganche, sin fiador y sin revisar tu historial, a 10 o 20 años.',
+   senal:'Nadie te dice el precio de contado ni la tasa que esconde la cuota, el lote no se escritura a tu nombre hasta el final, y el contrato dice que si te atrasás perdés el lote y lo pagado. Algunos de estos negocios ganan más cuando el comprador no termina de pagar.',
+   hacer:'Pedí el precio de contado y el contrato antes de dar el enganche. Confirmá en el Registro de la Propiedad que el vendedor sea el dueño de la finca y en la municipalidad que la lotificación tenga licencia. En Mi vivienda podés calcular cuánto pagarías en total y qué preguntar antes de firmar.'},
+  {k:'ayuda', marca:'q_ninguna', t:'Pedidos de ayuda falsos',
+   que:'Mensajes o llamadas de alguien que dice ser un familiar en apuros (detenido en migración, en el hospital, con una multa), o colectas por redes para una causa que nadie puede verificar.',
+   senal:'Hay urgencia, te piden no contarle a nadie, el número es nuevo o desconocido, y el dinero va a la cuenta de una persona que no conocés.',
+   hacer:'Antes de mandar dinero, llamá a tu familiar al número que ya tenías o preguntale a alguien cercano. Si querés ayudar en una colecta, hacelo con personas u organizaciones que conocés. Si fue una estafa, podés denunciar en el Ministerio Público.'},
+  {k:'falsos', marca:'q_ofertas', t:'Inversiones falsas con caras conocidas',
+   que:'Anuncios en redes sociales con videos de famosos, funcionarios o empresarios que invitan a invertir. Muchos están hechos con inteligencia artificial.',
+   senal:'Te piden un pago para "registrarte", y después más pagos o los datos de tu tarjeta para poder "retirar" tus ganancias.',
+   hacer:'Ninguna institución pública ofrece inversiones por redes sociales: en 2024 el Banco de Guatemala lo desmintió públicamente. No compartás datos de tu tarjeta ni tu DPI.',
+   dato:`El Ministerio Público recibe unas ${D.mp_fraude_diario.v} denuncias de fraude digital al día; ${D.mp_fraude_facebook.v} de cada 100 vienen de Facebook (MP, noviembre de 2025).`},
+  {k:'rend2', marca:'q_ofertas', t:'Inversiones que pagan "mucho cada mes"',
+   que:'Te ofrecen 5%, 10% o más al mes por tu dinero.',
+   senal:`Un 2% al mes ya es casi 27% al año; un Bono del Tesoro paga ${M.fmtPct(D.bono_cupon.v.a1)} al año. Si nadie te explica de dónde sale la ganancia, probablemente sale del dinero de los que entran después.`,
+   hacer:'Antes de poner un quetzal, verificá en la Superintendencia de Bancos (SIB) si la entidad está autorizada para recibir dinero del público.',
+   dato:`Más de ${D.piramides_afectados.v.toLocaleString('en-US')} guatemaltecos fueron afectados por cinco plataformas piramidales (PNC, 2022).`},
+  {k:'membresia', marca:'q_ofertas', t:'Pagar para ganar por tareas fáciles',
+   que:'Te piden una inscripción para ganar viendo videos, dando "me gusta" o completando tareas simples.',
+   senal:'Pagar para poder ganar es la señal más clara de una pirámide. Al principio pagan poco para ganar tu confianza.',
+   hacer:'No pagues. Si ya pagaste, guardá los comprobantes y los chats; podés denunciar ante el Ministerio Público.'},
+  {k:'mlm', marca:'q_ofertas', t:'Multinivel',
+   que:'Vendés productos y ganás, sobre todo, por reclutar a otras personas que también vendan.',
+   senal:'Te piden comprar inventario o un "paquete de inicio", y se habla más de reclutar que de vender.',
+   hacer:'Antes de comprar, calculá cuánto tendrías que vender solo para recuperar lo que pagaste.',
+   dato:`Según la FTC de Estados Unidos, la mayoría de participantes de multinivel recibe US$${D.mlm_ftc.v.toLocaleString('en-US')} o menos al año.`},
+  {k:'apuestas', marca:'q_ofertas', t:'Apuestas deportivas y casinos en línea',
+   que:'Sitios y aplicaciones para apostar a partidos o jugar casino desde el teléfono, a cualquier hora.',
+   senal:'Están diseñados para que, con el tiempo, la casa gane. Los bonos de bienvenida y la facilidad de depositar hacen que se apueste más de lo planeado, y es común intentar "recuperar" lo perdido.',
+   hacer:'Si apostás, que sea solo dinero que podés perder, con un límite fijo al mes, y nunca con tarjeta de crédito o dinero prestado. En Guatemala no existe un regulador del juego en línea: si una plataforma no te paga, no hay una oficina local a dónde reclamar.',
+   dato:`Según la Comisión de The Lancet sobre juego (2024), de cada 100 adultos que juegan casino en línea, unos ${Math.round(D.juego_trastorno.v.casino)} desarrollan un problema de juego; en apuestas deportivas, unos ${Math.round(D.juego_trastorno.v.deportes)}.`},
+  {k:'trading', marca:'q_ofertas', t:'Cursos y señales de trading',
+   que:'Cursos o grupos que prometen ganar comprando y vendiendo inversiones en línea, muchas veces a diario.',
+   senal:'Se muestran ganancias, casi nunca pérdidas, y se gana más vendiendo el curso que operando.',
+   hacer:'Pedí resultados verificables de los alumnos, no capturas de pantalla.',
+   dato:`En un estudio con todos los day traders de un mercado de Brasil, ${D.day_trading_pierde.v} de cada 100 que persistieron más de 300 días perdieron dinero.`}
+];
+function alertasHTML(){
+  return `<p class="chico">Estas ofertas afectan a personas de cualquier nivel de ingreso o estudio. Lo que tienen en común es que se aprovechan de la falta de información. Si marcaste alguna, aparece primero.</p>` +
+    ALERTAS.map(a => ({a, marcada: (r[a.marca]||[]).includes(a.k)})).sort((x,y)=>y.marcada-x.marcada).map(({a, marcada}) => `
+    <article class="alerta ${marcada?'marcada':''}">
+      <h3>${esc(a.t)}${marcada?' <span class="nv nv-minimo">La marcaste</span>':''}</h3>
+      <p class="etq">Qué es</p><p>${glosar(a.que)}</p>
+      <p class="etq">Cómo reconocerla</p><p>${glosar(a.senal)}</p>
+      ${a.dato?`<p class="de100"><b>Un dato:</b> ${esc(a.dato)}</p>`:''}
+      <p class="etq">Qué podés hacer</p><p>${glosar(a.hacer)}</p>
+    </article>`).join('');
+}
+
+// v1.5: la Escalera entrega tus números a las herramientas (en el fragmento #, que no sale del teléfono)
+function fondoLink(f){
+  if(!window.U) return '';
+  U.cargarEscalera(r, f);
+  const h = U.HERRAMIENTAS.find(x => x.p===f.peldano) || U.HERRAMIENTAS[0];
+  return `<a class="btn" style="margin-top:12px;text-decoration:none" href="${U.link(h.k)}">Abrir la herramienta de tu peldaño: ${h.nombre}</a>`;
+}
+function herramientasHTML(f){
+  if(!window.U) return '';
+  return `<section class="herr"><h2>Las herramientas de la escalera</h2>
+    <p class="suave chico">Cada una ayuda a subir un peldaño. Se abren con tus números ya puestos, y podés cambiarlos.</p>
+    ${U.HERRAMIENTAS.map(h => `<a class="puente ${h.p===f.peldano?'tuyo':''}" href="${U.link(h.k)}"><span class="bn">${h.p}</span><span><b>${h.nombre}${h.p===f.peldano?' · tu peldaño':''}</b><small>${h.que}</small></span><span class="flecha" aria-hidden="true">›</span></a>`).join('')}
+    <p class="chico" style="margin-top:12px"><a href="${U.link('resumen')}">Ver mi escalera en una hoja</a> <span class="suave">· todo lo anterior con tus números, para imprimir o compartir</span></p>
+  </section>`;
+}
+
+function bloque(id, num, titulo, explica, cuerpo, abierto){
+  return `<details class="bloque-r" id="${id}" ${abierto?'open':''}>
+    <summary><span class="num">${num}</span><span class="tit"><b>${titulo}</b><small>${explica}</small></span><span class="flecha" aria-hidden="true">›</span></summary>
+    <div class="bloque-c">${cuerpo}</div></details>`;
+}
+
+function resultados(){
+  vista='resultados';
+  const f = M.evaluarFoto(r, {max:8});
+  f.hallazgos = f.hallazgos.filter(h => h.familia!=='Promesas').slice(0,4); // las ofertas van en Señales de alerta
+  const rojo = (f.tropiezo.A && f.tropiezo.A.semaforo==='rojo') || (f.tropiezo.B && f.tropiezo.B.sinTrabajo.semaforo==='rojo') || f.peldano<=2;
+  const faltan = {q_ingreso:'tu ingreso', q_gastos:'tus gastos', q_saldo_tc:'el saldo de tu tarjeta', q_cuotas_otras:'tus pagos de préstamos', q_ahorro:'tu ahorro', q_pago_tc:'cómo pagás tu tarjeta', q_atrasos:'tus atrasos', q_seguro:'si tenés seguro médico', q_retiro:'tu ahorro para el retiro'};
+  const aqui = f.escalera.find(e => e.estado==='aqui');
+
+  $app.innerHTML = `
+    <p class="ceja">Laboratorio 3 · Escalera financiera</p>
+    <p class="aviso"><strong>Orientación inicial, no es asesoría.</strong> ${esc(f.aviso.replace(/^Herramienta educativa\. No es asesoría financiera\. /,''))}</p>
+
+    <section class="breve" tabindex="-1" id="titulo">
+      <p class="etq" style="margin-top:0">Tu resultado en breve</p>
+      <p class="lugar">Estás en el peldaño ${f.peldano}: ${esc(f.nombre)}</p>
+      ${aqui && aqui.por ? `<p>${glosar(aqui.por)}</p>` : ''}
+      ${f.porConfirmar.length?`<p class="suave chico">Por confirmar: nos falta ${f.porConfirmar.map(k=>faltan[k]||k).join(', ')}.</p>`:''}
+      <div class="siguiente"><p class="etq" style="margin-top:0">Tu siguiente paso</p>
+        <p class="sig-texto">${f.siguientePaso ? glosar(f.siguientePaso) : 'Completar los datos que faltan y repetir el recorrido.'}</p>
+        <p class="chico suave" style="margin:0">Es una sola cosa, a propósito. Abajo está el detalle, por si querés entender de dónde sale.</p>
+        ${fondoLink(f)}</div>
+    </section>
+
+    ${rojo?`<div class="calma"><h3>Esto es común y tiene salida</h3>
+      <p>Mucha gente en Guatemala está en una situación parecida. Este resultado no te define: es un punto de partida, y los primeros peldaños casi siempre son los más difíciles.</p>
+      <p class="chico" style="margin:0">Si tenés dudas sobre una deuda con un banco o cooperativa, la Superintendencia de Bancos atiende consultas de forma gratuita: <a href="https://www.sib.gob.gt/web/sib/atencion-al-usuario/consultas" target="_blank" rel="noopener">atención al usuario de la SIB</a>. Para problemas con un comercio o proveedor, la <a href="https://diaco.gob.gt" target="_blank" rel="noopener">DIACO</a>.</p></div>`:''}
+
+    ${herramientasHTML(f)}
+
+    <h2>El detalle, en cinco partes</h2>
+    <p class="suave chico">Tocá cada parte para abrirla. Las palabras subrayadas se explican al tocarlas.</p>
+    ${bloque('b1','1','Dónde estás: de lo mínimo a lo ideal','Cada área de tus finanzas comparada con cuatro niveles.',
+      `<p class="chico">La meta no es llegar a lo ideal de golpe, sino subir un nivel a la vez. Los niveles son referencias de UMBRAL, no reglas oficiales.</p>
+       ${nivelesHTML(f.niveles)}
+       <p class="etq">Tus números</p>${resumenHTML(f.resumen)}`, true)}
+    ${bloque('b2','2','Por qué estás en este peldaño','Lo que pide cada peldaño y lo que cumplís con tus números.', escaleraHTML(f))}
+    ${bloque('b3','3','Qué pasaría si tropezás','Dos imprevistos comunes, calculados con tus números.',
+      `<div class="tropiezo"><h3>Una emergencia de Q10,000</h3>${tarjetaA(f.tropiezo.A)}</div>
+       <div class="tropiezo"><h3>Un mes sin ingreso</h3><div id="tb">${tarjetaB(f.tropiezo.B)}</div></div>`)}
+    ${bloque('b4','4','Para entender mejor tu situación','Lo más importante que vimos en tus respuestas, ordenado por tema.',
+      f.hallazgos.length ? grupoHallazgos(f.hallazgos) : '<p>No encontramos nada que destacar con tus respuestas.</p>')}
+    ${bloque('b5','5','Señales de alerta','Ofertas que circulan en Guatemala y cómo reconocerlas antes de perder dinero.', alertasHTML())}
+
+    <h2>Cuando des tu siguiente paso</h2>
+    <p class="chico">Guardá este resultado y repetí el recorrido más adelante para ver si subiste de nivel.</p>
+    <button class="btn" id="guardar">Guardar en este teléfono</button>
+    <div class="fila"><button class="btn sec" id="repetir">Repetir</button><button class="btn sec" id="borrar">Borrar todo</button></div>
+    <p id="estado" class="suave chico" role="status" style="margin-top:12px"></p>
+    <p style="margin-top:20px"><button class="enlace" id="como">Cómo funciona y de dónde salen los datos</button></p>`;
+
+  document.getElementById('titulo').focus();
+  const enlazarB = () => document.querySelectorAll('[data-b]').forEach(b => b.onclick = () => {
+    escenarioB = b.dataset.b; document.getElementById('tb').innerHTML = tarjetaB(f.tropiezo.B); enlazarB(); });
+  enlazarB();
+  const estado = m => document.getElementById('estado').textContent = m;
+  document.getElementById('guardar').onclick = () => estado(guardar() ? 'Guardado solo en este teléfono.' : 'Este navegador no permite guardar. Tu resultado no salió del teléfono.');
+  document.getElementById('borrar').onclick = () => { borrar(); r={}; estado('Borrado. No queda nada guardado en este teléfono.'); setTimeout(inicio, 900); };
+  document.getElementById('repetir').onclick = () => { r={}; pila=[]; i=0; pregunta(); };
+  document.getElementById('como').onclick = comoFunciona;
+}
+
+function comoFunciona(){
+  const volver = vista;
+  const conf = {oficial:'Oficial', prensa:'Fuente secundaria', academico:'Académica'};
+  const NOMBRES = {
+    tc_tasa_prom_mn:'Tasa promedio de tarjetas de crédito', tc_mora_mn:'Deuda de tarjetas que no se paga a tiempo', tc_tasa_mensual_rango:'Tasas mensuales de tarjetas por emisor',
+    tc_pago_min_pct:'Pago mínimo de la tarjeta', tc_pago_min_piso:'Pago mínimo más bajo permitido', tc_tope_tasa:'Tope legal a la tasa de tarjetas',
+    tc_convenio_atrasos:'Convenio de pago por atrasos', sib_historial_meses:'Historial crediticio en la SIB', activa_sin_tc_mn:'Tasa promedio de préstamos (sin tarjetas)',
+    pasiva_mn:'Tasa promedio de depósitos', isr_intereses:'ISR sobre intereses', inflacion_interanual:'Inflación interanual', tasa_lider:'Tasa líder de política monetaria',
+    bono_min:'Inversión mínima en Bonos del Tesoro', bono_cupon:'Tasa de los Bonos del Tesoro (1, 2 y 3 años)', bono_vencimiento:'Vencimiento de los Bonos del Tesoro',
+    bono_cupo_pi:'Cupo disponible para pequeños inversionistas', igss_subsidio_frac:'Subsidio del IGSS por enfermedad', igss_subsidio_tope:'Tope diario del subsidio del IGSS',
+    igss_subsidio_max:'Duración máxima del subsidio (en semanas)', igss_cuota_laboral:'Cuota laboral del IGSS', ivs_requisitos:'Requisitos de la pensión del IGSS (edad / cuotas)',
+    ivs_min_max:'Pensión del IGSS mínima / máxima', ivs_formula:'Fórmula de la pensión del IGSS', isr_tarifa:'Tarifa del ISR para asalariados',
+    isr_deducciones_2026:'Deducciones del ISR 2026', planilla_iva_tope:'Tope de la planilla del IVA', findex_emergencia:'Cómo cubrirían una emergencia, de cada 100',
+    enifh:'Encuesta Nacional de Inclusión Financiera', informalidad:'Personas que trabajan sin contrato formal', gasto_bolsillo_salud:'Gasto de bolsillo en salud',
+    day_trading_pierde:'Day traders que perdieron dinero', piramides_afectados:'Personas afectadas por pirámides', mlm_ftc_17:'Multiniveles donde la mayoría no ganó nada',
+    mlm_ftc:'Ingreso anual de la mayoría en multiniveles', juego_trastorno:'Problema de juego entre quienes apuestan en línea (de cada 100)', juego_sin_regulador:'Regulador del juego en línea en Guatemala', mp_fraude_diario:'Denuncias de fraude digital al día', mp_fraude_facebook:'Fraudes digitales que vienen de Facebook (%)'};
+  const VALORES = {juego_trastorno:'16 en casino · 9 en apuestas deportivas', juego_sin_regulador:'No existe', mp_fraude_diario:'Unas 50', mp_fraude_facebook:'33%',tc_pago_min_pct:'2% del saldo + intereses y cargos', tc_pago_min_piso:'Q200', sib_historial_meses:'Últimos 60 meses',
+    bono_cupon:'6.000% / 6.125% / 6.250%', bono_cupo_pi:'Q295.99 millones de Q500 millones', igss_subsidio_tope:'Q150', igss_subsidio_max:'26 por enfermedad; 52 en 24 meses',
+    ivs_requisitos:'60 años y 240 cuotas', ivs_min_max:'Q340 / Q7,200', isr_tarifa:'5% hasta Q300,000', informalidad:'66%', gasto_bolsillo_salud:'54%',
+    day_trading_pierde:'97 de cada 100', piramides_afectados:'Más de 20,000', mlm_ftc_17:'Al menos 17 empresas', mlm_ftc:'US$1,000 o menos',
+    tc_tope_tasa:'No existe', igss_subsidio_frac:'2/3 del salario', tc_convenio_atrasos:'Desde 2 atrasos', ivs_formula:'50% + 0.5% por semestre sobre 120 cuotas',
+    enifh:'11% con tarjeta · 11% con seguro · 53% no sabe dónde quejarse', findex_emergencia:'85 podrían · 45 con mucha dificultad · 16 con ahorros · 34 con familia'};
+  const fmtNum = (k, x) => typeof x!=='number' ? String(x) : (x>0 && x<1) ? M.fmtPct(x) : x>=1000 ? (/^(mlm|piramides|bono_cupo)/.test(k) ? x.toLocaleString('en-US') : Q(x)) : String(x);
+  const fmtValor = (k, v) => VALORES[k] ? VALORES[k] : Array.isArray(v) ? v.map(x=>fmtNum(k,x)).join(' a ')
+    : (v && typeof v==='object') ? Object.values(v).map(x=>fmtNum(k,x)).join(' / ') : fmtNum(k, v);
+  const filas = Object.keys(D).filter(k => NOMBRES[k]).map(k => { const d = D[k];
+    return `<tr><td>${esc(NOMBRES[k])}</td><td>${esc(fmtValor(k, d.v))}</td><td>${esc(d.etiqueta)}</td><td>${esc(d.fuente)}</td><td>${conf[d.conf]}</td></tr>`; }).join('');
+  $app.innerHTML = `
+    <p class="ceja">Laboratorio 3 · Nota de laboratorio</p>
+    <h1 tabindex="-1" id="titulo">Cómo funciona la Escalera financiera</h1>
+    <p>Funciona con reglas fijas basadas en datos oficiales. No usa inteligencia artificial ni se conecta a internet después de cargar. Tus respuestas no salen de este teléfono.</p>
+    <h2>La escalera</h2>
+    <p>Quedás en el primer peldaño cuya condición no cumplís:</p>
+    <ol class="chico">
+      <li>Ordenar el día a día: tus gastos y cuotas caben en tu ingreso.</li>
+      <li>Fondo de emergencia inicial: tenés ahorrado al menos un mes de gastos.</li>
+      <li>Deudas: no te atrasás, pagás el total de tu tarjeta (si tenés) y tus cuotas no pasan de 30% de tu ingreso. El 30% es una referencia internacional, no una norma guatemalteca.</li>
+      <li>Protección: tenés 3 meses de gastos (6 si sos el único ingreso) y seguro médico. La regla de 3 a 6 meses es una convención internacional.</li>
+      <li>Metas: ahorrás algo aparte para tu retiro.</li>
+      <li>Inversión conservadora: cumplís todo lo anterior.</li>
+    </ol>
+    <h2>Los datos</h2>
+    <p>Cada número viene de una fuente pública con fecha. "Fuente secundaria" significa que leímos la norma en prensa o en una consultora y aún no en su texto oficial.</p>
+    <div class="tabla"><table><thead><tr><th>Dato</th><th>Valor</th><th>Fecha</th><th>Fuente</th><th>Tipo</th></tr></thead><tbody>${filas}</tbody></table></div>
+    <p class="chico suave">Escalera financiera · versión 1.0 · octubre 2026. Los cálculos de deuda, pensión y rendimiento son ejemplos ilustrativos con supuestos simplificados.</p>
+    <div class="nota-lab"><b>Nota de laboratorio</b><p class="chico" style="margin:0">${esc(M.AVISOS.entrada)}</p></div>
+    <button class="btn sec" id="volver">Volver</button>`;
+  document.getElementById('titulo').focus();
+  document.getElementById('volver').onclick = () => volver==='resultados' ? resultados() : volver==='pregunta' ? pregunta() : inicio();
+}
+
+
+inicio();
+})();
+
+</script>
+</body>
+</html>

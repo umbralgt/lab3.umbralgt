@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>De dónde salen los datos · Lab 3 · UMBRAL</title>
+<meta name="description" content="Todos los datos que usan las herramientas del Lab 3, con su fuente y su fecha.">
+<meta property="og:title" content="De dónde salen los datos · UMBRAL Lab 3">
+<meta property="og:description" content="Todos los datos que usan las herramientas del Lab 3, con su fuente y su fecha.">
+<meta property="og:type" content="website"><meta property="og:url" content="https://lab3.umbralgt.com/datos/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Sistema visual UMBRAL (Lab 1 y Lab 2). Color: blanco y negro de base; azul #2f5bd3 como único acento;
+   verde, ámbar y rojo solo para el semáforo y los errores, siempre en tinte suave (igual que .traffic-* de Lab 1);
+   otros colores (morado, naranja, verde de mapa) solo para distinguir categorías de datos, como las capas de Lab 1. */
+:root{
+  --negro:#0a0a0a; --blanco:#ffffff; --suelo:#f4f4f2; --g200:#efefef; --g300:#e3e3e3; --g400:#cfcfcf; --g600:#6b6b6b;
+  --azul:#2f5bd3; --azul-claro:#eef2fc;
+  --verde:#1f7a3b; --verde-claro:#e7f6ec; --ambar:#c79200; --ambar-claro:#fff7da; --rojo:#c0392b; --rojo-claro:#ffe3e3;
+  --linea:1.5px solid var(--negro); --suave:1px solid var(--g300);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(54px + env(safe-area-inset-top,0px))}
+body{margin:0;background:var(--blanco);color:var(--negro);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--negro)}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+
+/* Barra de navegación, igual a Lab 1 y Lab 2 */
+#nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;height:54px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--blanco);border-bottom:var(--linea)}
+#nav .logo{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--negro);text-decoration:none;white-space:nowrap}
+#nav .mods{display:flex;gap:4px;flex:1;justify-content:center}
+#nav .mod{padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--g600);border-radius:6px;text-decoration:none}
+#nav .mod.activo{color:var(--negro);background:var(--g200)}
+#nav .volver{margin-left:auto;display:inline-flex;gap:8px;padding:8px 14px;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:500;border-radius:8px;text-decoration:none;white-space:nowrap}
+#nav .logo{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#nav .volver{flex:none}
+@media (max-width:560px){#nav .mods{display:none}#nav{padding:0 14px;gap:8px}#nav .volver{padding:8px 12px}}
+
+main{max-width:680px;margin:0 auto;padding:28px 20px 48px}
+.ceja{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin:0 0 10px}
+h1{font-size:2.1rem;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:0 0 14px}
+h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:36px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--g300)}
+h3{font-size:1rem;font-weight:700;margin:0 0 6px}
+p{margin:0 0 14px}
+.suave{color:var(--g600)}
+.chico{font-size:.88rem;line-height:1.5}
+.nota-lab{border:var(--linea);border-radius:8px;padding:14px 16px;margin:20px 0}
+.nota-lab b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.aviso{background:var(--ambar-claro);border:1.5px solid var(--ambar);border-radius:8px;padding:10px 14px;font-size:.85rem;color:var(--ambar);margin:0 0 20px}
+.aviso strong{font-weight:700}
+.btn{display:block;width:100%;padding:13px;border:var(--linea);border-radius:8px;background:var(--negro);color:var(--blanco);font-size:15px;font-weight:700;text-align:center}
+.btn:hover{opacity:.88}
+.btn.sec{background:var(--blanco);color:var(--negro)}
+.btn.sec:hover{background:var(--g200);opacity:1}
+.enlace{background:none;border:0;padding:4px 0;color:var(--negro);text-decoration:underline;text-underline-offset:3px;font-size:.95rem}
+.fila{display:flex;gap:10px;margin-top:20px}
+.fila .btn{flex:1}
+
+/* Pregunta */
+.avance{height:4px;background:var(--g300);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.avance i{display:block;height:100%;background:var(--negro);transition:width .3s}
+.bloque{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:24px}
+.pregunta{font-size:1.55rem;line-height:1.25;letter-spacing:-.02em;font-weight:700;margin:0 0 8px}
+.opciones{display:grid;gap:8px;margin-top:20px}
+.op{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border-radius:8px;border:1.5px solid var(--g400);background:var(--blanco);font-size:1rem;font-weight:500}
+.op:hover{border-color:var(--negro)}
+.op[aria-pressed="true"]{border-color:var(--negro);background:var(--negro);color:var(--blanco)}
+.op .caja{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor}
+.op.multi .caja{border-radius:4px}
+.op[aria-pressed="true"] .caja{background:var(--blanco);box-shadow:inset 0 0 0 3px var(--negro)}
+.monto{display:flex;align-items:center;border:1px solid var(--g400);border-radius:8px;background:var(--suelo);margin-top:20px}
+.monto:focus-within{border-color:var(--negro);background:var(--blanco);box-shadow:0 0 0 1px var(--negro)}
+.monto span{padding:0 2px 0 16px;font-size:1.5rem;font-weight:700;color:var(--g600)}
+.monto input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:1.5rem;font-weight:700;padding:12px 16px 12px 4px;color:var(--negro)}
+.monto input:focus{outline:none}
+.unidad{display:flex;gap:8px;margin-top:10px}
+.unidad .op{flex:1;justify-content:center;padding:10px}
+.nose{margin-top:10px}
+.ayuda{margin-top:16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.help-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--negro);background:var(--blanco);font-size:12px;font-weight:700;color:var(--negro);padding:0;line-height:1}
+.help-icon:hover,.help-icon[aria-expanded="true"]{background:var(--negro);color:var(--blanco)}
+.help-lbl{font-size:.9rem;color:var(--g600)}
+.help-bubble{flex-basis:100%;background:var(--blanco);border:1.5px solid var(--negro);border-radius:10px;padding:12px 14px;font-size:.92rem;line-height:1.65;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.error{color:var(--rojo);font-size:.95rem;margin-top:8px;min-height:1.4rem}
+
+/* Escalera */
+.lugar{font-size:2rem;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:4px 0 8px}
+.escalera{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column-reverse}
+.peldano{display:flex;align-items:center;gap:14px;padding:7px 0}
+.peldano .travesano{flex:none;width:72px;height:12px;border:1.5px solid var(--g400);border-radius:2px;position:relative}
+.peldano .travesano::before,.peldano .travesano::after{content:"";position:absolute;top:-10px;bottom:-10px;width:1.5px;background:var(--g400)}
+.peldano .travesano::before{left:-1.5px}.peldano .travesano::after{right:-1.5px}
+.peldano.hecho .travesano{background:var(--negro);border-color:var(--negro)}
+.peldano.aqui .travesano{background:var(--azul);border-color:var(--azul);height:16px}
+.peldano .nombre{font-size:.95rem;color:var(--g600)}
+.peldano.hecho .nombre{color:var(--negro)}
+.peldano.aqui .nombre{color:var(--azul);font-weight:700}
+.peldano.lejos{opacity:.55}
+
+/* Tropiezo */
+.tropiezo{border:var(--linea);border-radius:10px;padding:16px;margin-top:12px}
+/* Semáforo como el traffic-box de Lab 1: tinte suave, borde del mismo tono, sin mayúsculas */
+.semaforo{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:3px 10px;border-radius:6px;border:1.5px solid}
+.semaforo::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.semaforo.verde{color:var(--verde);background:var(--verde-claro)}
+.semaforo.amarillo{color:var(--ambar);background:var(--ambar-claro)}
+.semaforo.rojo{color:var(--rojo);background:var(--rojo-claro)}
+.cifra{font-size:1.8rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin:10px 0 6px}
+.pestanas{display:flex;gap:0;border:var(--linea);border-radius:8px;overflow:hidden;width:fit-content;margin:4px 0 14px}
+.pestanas .op{border:0;border-radius:0;padding:8px 14px;font-size:12px;font-weight:700}
+.pestanas .op .caja{display:none}
+.compara{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.compara div{background:var(--suelo);border:var(--suave);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.compara b{display:block;font-size:1.2rem;letter-spacing:-.02em}
+.calma{background:var(--suelo);border:var(--linea);border-radius:10px;padding:16px;margin-top:20px}
+
+/* Hallazgos */
+.hallazgo{border:var(--suave);border-radius:10px;padding:16px;margin-top:10px}
+.familia{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:6px}
+.hallazgo .vimos{font-weight:700;font-size:1.08rem;letter-spacing:-.01em;margin-bottom:8px}
+.de100{border-left:3px solid var(--azul);background:var(--azul-claro);padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0}
+.paso{margin-top:10px}
+.nota{font-size:.85rem;color:var(--g600);margin-top:8px}
+.pie{font-size:.8rem;color:var(--g600);border-top:var(--suave);margin-top:12px;padding-top:8px}
+.marca-verif{display:inline-block;font-size:12px;font-weight:700;border:1.5px solid var(--ambar);color:var(--ambar);background:var(--ambar-claro);padding:2px 8px;border-radius:6px;margin-top:8px}
+
+/* Cómo funciona */
+.tabla{overflow-x:auto;margin:12px 0;border:var(--suave);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.82rem;min-width:30rem}
+th,td{text-align:left;padding:7px 9px;border-bottom:var(--suave);vertical-align:top}
+th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--g600)}
+
+footer{background:#0a0a0a;padding:28px 20px;margin-top:48px}
+.pie-in{max-width:680px;margin:0 auto}
+footer .lema{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.02em;margin:0 0 6px}
+footer .per{font-size:12px;color:#777;font-style:italic;margin:0 0 20px}
+.pie-fila{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid #1e1e1e}
+.pie-fila span{font-size:11px;color:#777;font-weight:500}
+.pie-fila a{display:inline-flex;gap:8px;padding:7px 14px;background:#fff;color:#0a0a0a;font-size:11px;font-weight:500;border-radius:8px;text-decoration:none}
+
+/* v1.1: ajustes de la primera prueba con usuario */
+.porque{background:var(--suelo);border-left:3px solid var(--azul);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.92rem;margin:10px 0 0}
+.term{display:inline;background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:help}
+.def{display:block;background:var(--blanco);color:var(--negro);border:1.5px solid var(--negro);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:.92rem;font-weight:400;line-height:1.55;letter-spacing:0;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.def b{font-weight:700}
+.term[aria-expanded="true"]{background:var(--azul-claro)}
+.explica{border:1.5px solid var(--negro);border-radius:10px;padding:12px 14px;margin-top:12px}
+.explica b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.explica p{margin:0}
+.desglose{display:grid;gap:8px;margin-top:20px}
+.fila-gasto{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.fila-gasto .lbl{flex:1;font-weight:600;font-size:.98rem;line-height:1.3}
+.fila-gasto small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.chico-monto{margin-top:0;width:9rem;flex:none}
+.chico-monto span{font-size:1rem;padding-left:12px}
+.chico-monto input{font-size:1.05rem;padding:9px 10px 9px 2px}
+.total-gasto{display:flex;justify-content:space-between;border-top:var(--linea);padding-top:10px;margin-top:4px;font-weight:700}
+.resumen{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.dato{border:var(--suave);border-radius:10px;padding:12px}
+.dato span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600)}
+.dato b{display:block;font-size:1.35rem;letter-spacing:-.02em}
+.dato small{display:block;font-size:.78rem;color:var(--g600);line-height:1.35}
+.pasos-esc{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
+.paso-esc{display:flex;gap:12px;padding:12px;border:var(--suave);border-radius:10px}
+.paso-esc .marca{flex:none;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:1.5px solid var(--g400);color:var(--g600)}
+.paso-esc.cumple .marca{background:var(--negro);color:var(--blanco);border-color:var(--negro)}
+.paso-esc.aqui{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.paso-esc.aqui .marca{border-color:var(--azul);color:var(--azul)}
+.paso-esc.despues{opacity:.7}
+.paso-esc p{margin:4px 0 0;font-size:.93rem}
+.etq{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin:12px 0 2px}
+.hallazgo .vimos{margin-bottom:4px}
+.siguiente{border:var(--linea);border-radius:10px;padding:16px}
+.siguiente .etq{margin-top:0}
+.sig-texto{font-size:1.25rem;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.mini-esc{margin:0 0 14px;padding:0;list-style:none;counter-reset:p;display:grid;gap:6px}
+.mini-esc li{counter-increment:p;display:flex;gap:10px;align-items:baseline;font-size:.95rem;color:var(--g600)}
+.mini-esc li::before{content:counter(p);flex:none;width:22px;height:22px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transform:translateY(4px)}
+.mini-esc b{color:var(--negro)}
+
+/* v1.2: segunda prueba con usuario */
+.breve{border:var(--linea);border-radius:10px;padding:16px;margin-top:4px}
+.breve:focus{outline:none}
+.breve .lugar{font-size:1.6rem}
+.breve .siguiente{margin-top:14px;background:var(--azul-claro);border:1.5px solid var(--azul)}
+.bloque-r{border:var(--linea);border-radius:10px;margin-top:10px}
+.bloque-r summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.bloque-r summary::-webkit-details-marker{display:none}
+.bloque-r .num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.bloque-r .tit{flex:1}
+.bloque-r .tit b{display:block;font-size:1.02rem;letter-spacing:-.01em}
+.bloque-r .tit small{display:block;color:var(--g600);font-size:.85rem;line-height:1.4}
+.bloque-r .flecha{font-size:1.4rem;transition:transform .2s}
+.bloque-r[open] .flecha{transform:rotate(90deg)}
+.bloque-c{padding:0 16px 16px}
+.nivel{border:var(--suave);border-radius:10px;padding:12px;margin-top:8px}
+.nivel-cab{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.nv{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;border:1.5px solid}
+.nv-riesgo{color:var(--rojo);background:var(--rojo-claro)}
+.nv-minimo{color:var(--ambar);background:var(--ambar-claro)}
+.nv-bien,.nv-ideal{color:var(--verde);background:var(--verde-claro)}
+.nivel-dato{margin:6px 0 8px;font-size:.95rem}
+.barra{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.seg{height:8px;border-radius:2px;background:var(--g300)}
+.seg.lleno{border:0}
+.seg.lleno.nv-riesgo{background:var(--rojo)}.seg.lleno.nv-minimo{background:var(--ambar)}.seg.lleno.nv-bien,.seg.lleno.nv-ideal{background:var(--verde)}
+.barra-et{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:4px}
+.barra-et span{font-size:10px;color:var(--g600);line-height:1.2}
+.nivel-sig{font-size:.88rem;margin:8px 0 0}
+.grupo{margin-top:14px}
+.grupo>h3{margin-bottom:2px}
+
+/* v1.3 */
+.compara.tres{grid-template-columns:1fr}
+@media (min-width:520px){.compara.tres{grid-template-columns:repeat(3,1fr)}}
+.compara span{display:block;font-size:.85rem;color:var(--g600)}
+.nivel-sig{font-size:.9rem;margin:10px 0 0;background:var(--suelo);border-radius:8px;padding:8px 10px}
+.alerta{border:var(--suave);border-radius:10px;padding:14px;margin-top:10px}
+.alerta.marcada{border:1.5px solid var(--ambar)}
+.alerta h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.alerta .etq{margin-top:8px}
+.alerta p{margin-bottom:4px}
+
+/* Mi fondo de emergencia */
+.probar{border:var(--linea);border-radius:10px;padding:14px 16px;margin-top:12px}
+.probar label{display:block;font-size:.95rem}
+.probar input[type=range]{width:100%;margin:10px 0 4px;accent-color:var(--azul)}
+.probar .chk{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:.92rem}
+.probar .chk input{width:18px;height:18px;accent-color:var(--azul)}
+.grafica{margin:4px 0 12px;position:relative}
+.grafica svg{width:100%;height:auto;display:block;touch-action:pan-y}
+.g-base{stroke:var(--g400);stroke-width:1}
+.g-meta{stroke:var(--g400);stroke-width:1;stroke-dasharray:4 4}
+.g-et{font-size:10px;fill:var(--g600);font-family:inherit}
+.g-ax{font-size:9.5px;fill:var(--g600);font-family:inherit}
+.g-linea{fill:none;stroke:var(--azul);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.g-hito{fill:var(--azul);stroke:var(--blanco);stroke-width:2}
+.g-cruz{stroke:var(--negro);stroke-width:1}
+.g-tip{position:absolute;top:0;left:0;background:var(--blanco);border:1.5px solid var(--negro);border-radius:8px;padding:4px 8px;font-size:.82rem;pointer-events:none}
+.hitos{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.hitos li{border:var(--suave);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.hitos li.hecho{border-color:var(--verde);background:var(--verde-claro)}
+.hitos span{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+.hitos small{color:var(--g600);font-size:.82rem}
+.lugar-g{border:var(--suave);border-radius:10px;padding:12px 14px;margin-top:10px}
+.lugar-g.actual{border:1.5px solid var(--ambar)}
+.lugar-g h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lugar-g dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:8px 0;font-size:.9rem}
+.lugar-g dt{color:var(--g600)}
+.lugar-g dd{margin:0}
+.progreso{background:var(--verde-claro);border:1.5px solid var(--verde);border-radius:10px;padding:12px;margin-bottom:12px}
+.breve .lugar .nv{font-size:14px}
+
+/* v0.2: calculadora en una sola pantalla */
+.origen{border-left:3px solid var(--azul);background:var(--azul-claro);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.92rem;margin:12px 0}
+.origen.ejemplo{border-left-color:var(--ambar);background:var(--ambar-claro)}
+.calc{border:var(--linea);border-radius:10px;padding:14px 16px;display:grid;gap:10px;margin-top:12px}
+.campo{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.campo>span:first-child{font-weight:600;font-size:.97rem;line-height:1.3}
+.campo small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.calc input[type=range]{width:100%;accent-color:var(--azul);margin:0}
+.extras{border-top:var(--suave);padding-top:10px;display:grid;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip-b{border:1.5px solid var(--g400);background:var(--blanco);border-radius:8px;padding:6px 12px;font-size:.88rem;font-weight:600}
+.chip-b[aria-pressed="true"]{background:var(--negro);border-color:var(--negro);color:var(--blanco)}
+#c-extra-det{display:grid;gap:8px}
+.breve .lugar{font-size:1.2rem;line-height:1.35;letter-spacing:-.01em;font-weight:500}
+.breve .lugar b{font-weight:700}
+
+.cumplir{border:var(--linea);border-radius:10px;padding:16px;margin-top:16px}
+.accion{border-top:var(--suave);padding-top:12px;margin-top:12px}
+.accion h3{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.accion .num{flex:none;width:22px;height:22px;border-radius:50%;background:var(--azul);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.accion p{margin-bottom:6px}
+.oculto{display:none!important}
+
+/* ===== Lab 3 · base común de herramientas (v1.0) ===== */
+/* Barrita de la escalera: los 6 peldaños, el actual en negro, el tuyo marcado en azul */
+#barrita{border-bottom:var(--suave);background:var(--blanco)}
+.barrita{max-width:680px;margin:0 auto;padding:10px 20px 8px}
+.barrita-cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600);margin-bottom:6px}
+.barrita-cab a{color:var(--g600);text-decoration:underline;text-underline-offset:2px;text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
+.barrita ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.barrita li a{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:4px 0 2px;border-radius:8px}
+.barrita li a:hover{background:var(--g200)}
+.barrita .bn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--g400);color:var(--g600);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;background:var(--blanco)}
+.barrita .bl{font-size:10.5px;line-height:1.15;color:var(--g600);text-align:center}
+.barrita li.actual .bn{background:var(--negro);border-color:var(--negro);color:var(--blanco)}
+.barrita li.actual .bl{color:var(--negro);font-weight:700}
+.barrita li.tuyo .bn{box-shadow:0 0 0 2px var(--blanco),0 0 0 4px var(--azul)}
+.barrita li.hecho .bn{border-color:var(--negro);color:var(--negro)}
+.barrita-nota{font-size:11.5px;color:var(--g600);margin:6px 0 0;line-height:1.35}
+.barrita-nota b{color:var(--azul)}
+
+/* Filas editables (deudas, metas) */
+.filas{display:grid;gap:10px}
+.fila-e{border:var(--suave);border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.fila-e-cab{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.fila-e-cab input{flex:1;min-width:0;border:0;border-bottom:1px dashed var(--g400);font:inherit;font-weight:700;font-size:1rem;padding:2px 0;background:transparent}
+.fila-e-cab input:focus{outline:none;border-bottom-color:var(--negro)}
+.quitar{border:0;background:none;color:var(--g600);font-size:.85rem;text-decoration:underline;padding:2px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{display:grid;gap:3px;font-size:.8rem;color:var(--g600);font-weight:600}
+.mini .monto{margin:0}
+.mini .monto span{font-size:.95rem;padding-left:10px}
+.mini .monto input{font-size:1rem;padding:8px 8px 8px 2px;font-weight:700}
+.mini .monto em{font-style:normal;font-size:.8rem;color:var(--g600);padding-right:10px;white-space:nowrap}
+.agregar{border:1.5px dashed var(--g400);background:var(--blanco);border-radius:10px;padding:10px;font-weight:600;font-size:.92rem;width:100%}
+.agregar:hover{border-color:var(--negro)}
+
+/* Barra apilada del ingreso */
+.apilada{display:flex;height:22px;border-radius:6px;overflow:hidden;border:1.5px solid var(--negro);margin:10px 0 8px}
+.apilada i{display:block;height:100%}
+.leyenda{list-style:none;padding:0;margin:0;display:grid;gap:4px;font-size:.9rem}
+.leyenda li{display:flex;align-items:center;gap:8px}
+.leyenda .cu{flex:none;width:12px;height:12px;border-radius:3px;border:1px solid var(--negro)}
+.leyenda .v{margin-left:auto;font-weight:700;white-space:nowrap}
+.c-basico{background:var(--negro)}.c-deuda{background:#6b6b6b}.c-var{background:#cfcfcf}.c-sobra{background:var(--azul)}.c-falta{background:repeating-linear-gradient(45deg,var(--rojo-claro),var(--rojo-claro) 4px,#f5b5b5 4px,#f5b5b5 8px)}
+.sobres{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.sobre{border:var(--linea);border-radius:10px;padding:10px;display:grid;gap:2px;align-content:start}
+.sobre span{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600)}
+.sobre b{font-size:1.15rem;letter-spacing:-.02em}
+.sobre small{font-size:.76rem;color:var(--g600);line-height:1.3}
+.sobre.futuro{border-color:var(--azul);background:var(--azul-claro)}
+@media (max-width:420px){.sobres{grid-template-columns:1fr}}
+
+/* Tarjetas de comparación de estrategias */
+.opciones3{display:grid;gap:8px;margin:10px 0}
+@media (min-width:560px){.opciones3{grid-template-columns:repeat(3,1fr)}}
+.op3{border:1.5px solid var(--g400);border-radius:10px;padding:12px;background:var(--blanco);text-align:left;display:grid;gap:2px;align-content:start}
+.op3[aria-pressed="true"]{border-color:var(--negro);box-shadow:inset 0 0 0 1px var(--negro)}
+.op3 .t{font-size:.82rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--g600)}
+.op3 b{font-size:1.25rem;letter-spacing:-.02em}
+.op3 small{font-size:.8rem;color:var(--g600);line-height:1.35}
+.op3.gris b{color:var(--g600)}
+.g-linea2{fill:none;stroke:var(--negro);stroke-width:2;stroke-linejoin:round}
+.g-linea3{fill:none;stroke:var(--g400);stroke-width:2;stroke-dasharray:5 4}
+.ley-g{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--g600);margin:2px 0 8px}
+.ley-g i{display:inline-block;width:16px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:5px}
+.orden{list-style:none;padding:0;margin:0;display:grid;gap:6px;counter-reset:o}
+.orden li{counter-increment:o;display:flex;gap:10px;align-items:baseline;border:var(--suave);border-radius:8px;padding:8px 10px;font-size:.93rem}
+.orden li::before{content:counter(o);flex:none;width:20px;height:20px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transform:translateY(3px)}
+.orden li span{margin-left:auto;font-weight:700;white-space:nowrap}
+
+/* Meses de protección */
+.meses-p{display:grid;gap:6px;margin:10px 0}
+.mes-p{display:grid;grid-template-columns:3.2rem 1fr;gap:8px;align-items:center;font-size:.82rem}
+.mes-p .pista{height:18px;border-radius:4px;background:var(--g200);overflow:hidden;display:flex}
+.mes-p .pista i{display:block;height:100%}
+.p-ingreso{background:var(--negro)}.p-fondo{background:var(--azul)}.p-falta{background:repeating-linear-gradient(45deg,var(--rojo-claro),var(--rojo-claro) 4px,#f5b5b5 4px,#f5b5b5 8px)}
+.lista-ok{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:6px}
+.lista-ok li{display:flex;gap:10px;align-items:flex-start;font-size:.93rem}
+.lista-ok input{flex:none;width:18px;height:18px;margin-top:3px;accent-color:var(--azul)}
+
+/* Metas */
+.meta-r{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-top:var(--suave);padding-top:8px;font-size:.92rem}
+.meta-r b{font-size:1.1rem;letter-spacing:-.02em;white-space:nowrap}
+.total-metas{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-top:var(--linea);padding-top:10px;margin-top:6px;font-weight:700}
+
+/* Comparador */
+.tabla td.num,.tabla th.num{text-align:right;white-space:nowrap}
+.tabla tr.destaca td{background:var(--azul-claro)}
+.sello{display:inline-block;font-size:10.5px;font-weight:700;border:1.5px solid var(--ambar);color:var(--ambar);background:var(--ambar-claro);padding:1px 6px;border-radius:5px;margin-left:4px;vertical-align:1px;white-space:nowrap}
+.revisor{border:1.5px solid var(--ambar);background:var(--ambar-claro);border-radius:10px;padding:14px 16px;margin-top:16px}
+.revisor .monto{background:var(--blanco)}
+.puente{display:flex;align-items:center;gap:12px;border:var(--linea);border-radius:10px;padding:14px 16px;margin-top:16px;text-decoration:none}
+.puente:hover{background:var(--suelo)}
+.puente .bn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--negro);color:var(--blanco);font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.puente span:nth-child(2){flex:1}
+.puente small{display:block;color:var(--g600);font-size:.85rem;line-height:1.35}
+.puente .flecha{font-size:1.3rem}
+.dos>*,.fila-e>*,.calc>*{min-width:0}
+.mini .monto input{width:100%;min-width:0}
+.fila-e .chips .chip-b{padding:6px 10px}
+.campo>.chips{flex:none;flex-wrap:nowrap}
+.lugar-g.destaca{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.lugar-g .cifras{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 4px}
+.lugar-g .cifras div{background:var(--blanco);border:var(--suave);border-radius:8px;padding:6px 8px}
+.lugar-g .cifras span{display:block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);line-height:1.2}
+.lugar-g .cifras b{font-size:1rem;letter-spacing:-.01em}
+/* Inversión v1.1: riesgo y encaje */
+.op-inv{display:grid;gap:6px}
+.op-inv h3{margin:0}
+.op-inv.encaja{border:1.5px solid var(--azul)}
+.encaje{margin:0;font-size:.85rem;font-weight:600;color:var(--g600)}
+.op-inv.encaja .encaje{color:var(--azul)}
+.riesgo{display:flex;align-items:center;gap:4px;font-size:.82rem}
+.riesgo span{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);margin-right:4px}
+.riesgo i{width:18px;height:8px;border-radius:2px;background:var(--g300)}
+.riesgo i.r-on{background:var(--negro)}
+.riesgo b{margin-left:6px;font-weight:600}
+.op-inv dl{margin:2px 0}
+.mas summary{cursor:pointer;font-size:.88rem;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.mas[open] summary{margin-bottom:6px}
+.op-inv dl{grid-template-columns:1fr;gap:0}
+.op-inv dt{font-size:.78rem;margin-top:6px}
+
+.sel{font:inherit;font-weight:700;border:1px solid var(--g400);border-radius:8px;background:var(--suelo);padding:9px 10px;width:9rem;flex:none}
+.barrita .bl{font-size:10px}
+@media (max-width:380px){.campo{flex-wrap:wrap}.campo>.chips{flex-wrap:wrap}}
+
+/* v1.1: hoja de la escalera y página de datos */
+.hoja{list-style:none;padding:0;margin:14px 0;display:grid;gap:8px}
+.hoja li{border:var(--suave);border-radius:10px;padding:12px 14px}
+.hoja li.aqui{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.hoja li.hecho{border-color:var(--verde)}
+.hoja-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hoja-cab .bn{flex:none;width:24px;height:24px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.dato-f h3{margin:0}
+.dato-v{font-size:1.1rem;font-weight:700;letter-spacing:-.01em;margin:4px 0}
+
+.solo-imprimir{display:none}
+@media print{
+  .solo-imprimir{display:block}
+  #nav,#barrita,footer,.no-imprimir,.nota-lab{display:none!important}
+  body{font-size:12px}
+  main{padding:0;max-width:none}
+  .hoja li{break-inside:avoid}
+  a{text-decoration:none;color:inherit}
+}
+
+.dar{border-top:var(--suave);margin-top:12px;padding-top:12px}
+.sobres:has(.sobre:nth-child(4)){grid-template-columns:repeat(2,1fr)}
+.dar .de100,.dar .de100 *{font-size:.88rem;line-height:1.5}.dar .de100 b{font-size:.88rem}
+/* Lab 3 Pro */
+.pro-modo{margin-top:6px}
+.pro-grid{display:grid;gap:12px;margin-top:12px}
+.pro-grid .calc{margin-top:0}
+.pro-grid.experto{grid-template-columns:1fr}
+@media (min-width:900px){ .pro-grid.experto{grid-template-columns:1fr 1fr} }
+.pro-c .monto em{font-style:normal;font-size:.78rem;color:var(--g600);padding-right:10px;white-space:nowrap}
+.pro-c .chico-monto{width:11rem}
+.explica ul li{margin-bottom:4px}
+.campo.apila{flex-wrap:wrap}.campo.apila>.chips{flex-wrap:wrap}
+.conecta{font-size:.88rem;line-height:1.5;margin:0;padding:8px 10px;border-left:3px solid var(--azul);background:var(--azul-claro);border-radius:0 8px 8px 0}
+.palancas{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}
+.palancas li{display:grid;grid-template-columns:1fr;gap:3px;border-bottom:var(--suave);padding-bottom:8px}
+.palancas .pt{font-size:.9rem;font-weight:600}
+.palancas .pb{height:8px;background:var(--g200);border-radius:4px;overflow:hidden}
+.palancas .pb i{display:block;height:100%;background:var(--azul);border-radius:4px}
+.palancas .pv{font-size:.95rem;font-weight:700}
+.palancas .pv small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.lecciones{display:grid;gap:8px}
+@media (min-width:760px){.lecciones{grid-template-columns:1fr 1fr}}
+.lecciones .bn{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;align-items:center;justify-content:center;margin-right:4px}
+.campo.apila>.chips{flex:1 1 100%;min-width:0}
+
+/* Pro: cadena "Cómo se conecta todo" */
+.cadena{border:1.5px solid var(--g300);border-radius:12px;padding:14px;margin:8px 0 4px}
+.cad-et{margin:0 0 8px;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--g600);font-weight:600}
+.cad-fila{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cad-caja{border:1px solid var(--g300);border-radius:8px;padding:8px 10px;min-width:0}
+.cad-caja b{display:block;font-size:.9rem;margin-bottom:2px}
+.cad-caja span{display:block;font-size:.82rem;color:var(--g600);line-height:1.4}
+.cad-flecha{margin:6px 0;text-align:center;color:var(--g600);font-size:1.1rem;line-height:1}
+.cad-cuenta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cad-cuenta>div{flex:1 1 0;min-width:0;border:1px solid var(--g300);border-radius:8px;padding:8px 10px}
+.cad-cuenta>div:last-child{border-color:var(--azul);background:var(--azul-claro)}
+.cad-cuenta span{display:block;font-size:.78rem;color:var(--g600)}
+.cad-cuenta b{display:block;font-size:.95rem}
+.cad-cuenta i{font-style:normal;font-weight:600;color:var(--g600)}
+.cad-final{border:1.5px solid var(--azul);background:var(--azul-claro);border-radius:10px;padding:10px 12px}
+.cad-final span{display:block;font-size:.8rem;color:var(--g600)}
+.cad-final b{display:block;font-size:1.5rem;color:var(--azul)}
+.cad-final p{margin:4px 0 0}
+.pro-aviso{margin-top:12px}
+@media (max-width:560px){.cad-fila{grid-template-columns:1fr}.cad-cuenta{flex-direction:column;align-items:stretch}.cad-cuenta i{text-align:center}}
+/* Pro: gráfica del dinero y secciones plegables */
+.g-tit{margin:0 0 2px;font-weight:600;font-size:1rem}
+.g-num{font-size:10px;font-weight:700;fill:var(--negro);font-family:inherit}
+.g-pasos{margin:8px 0 0;padding-left:1.4rem;font-size:.9rem;line-height:1.5}
+.g-pasos li{margin-bottom:3px}
+.ter-eq{display:block;margin-bottom:4px;color:var(--negro)}
+.pleg{border:1.5px solid var(--negro);border-radius:10px;margin:10px 0;background:var(--blanco)}
+.pleg>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px}
+.pleg>summary::-webkit-details-marker{display:none}
+.pleg>summary b{display:block;font-size:1rem}
+.pleg>summary small{display:block;font-size:.84rem;color:var(--g600);margin-top:1px}
+.pleg>summary i{flex:none;width:22px;height:22px;border:1.5px solid var(--negro);border-radius:50%;position:relative}
+.pleg>summary i::before,.pleg>summary i::after{content:"";position:absolute;left:5px;right:5px;top:50%;height:1.5px;margin-top:-.75px;background:var(--negro)}
+.pleg>summary i::after{transform:rotate(90deg);transition:transform .15s}
+.pleg[open]>summary i::after{transform:rotate(0)}
+.pleg[open]>summary{border-bottom:1px solid var(--g300)}
+.pleg-in{padding:4px 16px 14px}
+.pleg-in>h3:first-child,.pleg-in>p:first-child{margin-top:10px}
+/* Pro: camino del dinero, fuentes y equipo */
+.camino{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative}
+.camino li{position:relative;padding:22px 10px 0 0;min-width:0}
+.camino li::before{content:"";position:absolute;left:0;right:0;top:7px;height:1.5px;background:var(--negro)}
+.camino li:last-child::before{right:auto;width:14px}
+.camino li::after{content:"";position:absolute;left:0;top:1px;width:14px;height:14px;border-radius:50%;background:var(--blanco);border:1.5px solid var(--negro)}
+.camino li.peor::after{background:var(--rojo);border-color:var(--rojo)}
+.camino li.fin::after{background:var(--azul);border-color:var(--azul)}
+.camino li.fin.mal::after{background:var(--rojo);border-color:var(--rojo)}
+.cm-mes{display:block;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);font-weight:600}
+.camino b{display:block;font-size:.98rem;margin:2px 0}
+.cm-txt{display:block;font-size:.85rem;line-height:1.45;color:var(--g600)}
+.camino li.peor b{color:var(--rojo)}.camino li.fin b{color:var(--azul)}
+.fuentes{display:flex;height:22px;border-radius:6px;overflow:hidden;margin-top:6px;border:1px solid var(--negro)}
+.fuentes i{display:block;height:100%}
+.equipo{margin-top:18px;padding:16px 18px;border:1.5px solid var(--negro);border-radius:12px;border-left:6px solid var(--azul)}
+.ter-res{display:block;margin:4px 0 6px;padding:8px 10px;background:var(--azul-claro);border-radius:8px;color:var(--negro)}
+.conecta::before{content:"Para entenderlo, con un ejemplo general";display:block;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--azul);font-weight:600;margin-bottom:3px}
+@media (max-width:620px){
+  .camino{grid-template-columns:1fr}
+  .camino li{padding:0 0 16px 28px}
+  .camino li::before{left:6.5px;right:auto;top:16px;bottom:0;width:1.5px;height:auto}
+  .camino li:last-child::before{display:none}
+  .camino li::after{top:2px}
+}
+
+</style>
+</head>
+<body>
+<nav id="nav" aria-label="Laboratorio 3">
+  <a class="logo" href="https://lab3.umbralgt.com/">( U ) &nbsp; Lab 3 · Finanzas e Inversión</a>
+  <div class="mods"><a class="mod" href="https://lab3.umbralgt.com/escalera/">Escalera financiera</a><a class="mod" href="https://lab3.umbralgt.com/#herramientas">Herramientas</a></div>
+  <a class="volver" href="https://www.umbralgt.com">← umbralgt.com</a>
+</nav>
+<div id="barrita"></div>
+<main id="app" aria-live="polite"><noscript><p>Esta herramienta necesita JavaScript activado en el navegador.</p></noscript></main>
+<footer>
+  <div class="pie-in">
+    <p class="lema">explorar. contrastar. decidir.</p>
+    <p class="per">Per experimentum.</p>
+    <div class="pie-fila"><span>( UMBRAL ) · Lab 3 · Finanzas e Inversión · Ciudad de Guatemala · 2025–2027</span>
+      <a href="https://www.umbralgt.com" target="_blank" rel="noopener"><span>umbralgt.com</span><span aria-hidden="true">↗</span></a></div>
+  </div>
+</footer>
+<script>window.UMBRAL_URLS = {"portada": "https://lab3.umbralgt.com/", "escalera": "https://lab3.umbralgt.com/escalera/", "mes": "https://lab3.umbralgt.com/mi-mes/", "fondo": "https://lab3.umbralgt.com/fondo/", "deudas": "https://lab3.umbralgt.com/deudas/", "proteccion": "https://lab3.umbralgt.com/proteccion/", "metas": "https://lab3.umbralgt.com/metas/", "inversion": "https://lab3.umbralgt.com/inversion/", "vivienda": "https://lab3.umbralgt.com/vivienda/", "resumen": "https://lab3.umbralgt.com/mi-escalera/", "datos": "https://lab3.umbralgt.com/datos/", "pro": "https://lab3.umbralgt.com/pro/", "lab1": "https://lab1.umbralgt.com", "lab2": "https://lab2.umbralgt.com"};</script>
+<script src="/fin-motor.js"></script>
+<script src="/comun.js"></script>
+<script>
+// De dónde salen los datos: todos los datos del motor, con su fuente, fecha y tipo. Se genera del mismo motor que usan las herramientas.
+(function(){
+'use strict';
+const M = window.FinMotor, U = window.U, $app = document.getElementById('app');
+if(!M || !U){ $app.innerHTML = '<p class="aviso"><strong>No se pudo cargar la página.</strong> Revisá tu conexión y volvé a abrirla.</p>'; return; }
+const D = M.DATOS, Q = U.Q, esc = U.esc, P = x => M.fmtPct(x);
+U.activarGlosario($app);
+
+const TEMAS = [
+  ['Tarjetas, préstamos y deudas', {tc_tasa_prom_mn:'Tasa promedio de tarjetas de crédito', tc_mora_mn:'Deuda de tarjetas que no se paga a tiempo', tc_tasa_mensual_rango:'Tasas mensuales de tarjetas por emisor', tc_pago_min_pct:'Pago mínimo de la tarjeta', tc_pago_min_piso:'Pago mínimo más bajo', tc_tope_tasa:'Tope legal a la tasa de tarjetas', tc_convenio_atrasos:'Convenio de pago por atrasos', sib_historial_meses:'Historial crediticio en la SIB', activa_sin_tc_mn:'Tasa promedio de préstamos (sin tarjetas)'}],
+  ['Ahorro, inflación e inversión', {pasiva_mn:'Tasa promedio de depósitos en quetzales', pasiva_me:'Tasa promedio de depósitos en dólares', isr_intereses:'ISR sobre intereses', inflacion_interanual:'Inflación interanual', tasa_lider:'Tasa líder de política monetaria', fopa_cobertura:'Cobertura del FOPA por persona y banco', bono_min:'Inversión mínima en Bonos del Tesoro', bono_cupon:'Tasa de los Bonos del Tesoro (1, 2 y 3 años)', bono_vencimiento:'Vencimiento de los Bonos del Tesoro', bono_cupo_pi:'Cupo para pequeños inversionistas', bono_exento:'ISR de los Bonos del Tesoro', bono_secundario:'Venta de bonos antes de que venzan', bvn_comision:'Comisiones de agentes de bolsa', pagare_ejemplo:'Ejemplo de tasa de un pagaré de empresa', eeuu_ret_div:'Retención de EE.UU. sobre dividendos', ucits_ret_div:'Retención en fondos domiciliados en Irlanda', eeuu_herencia_ex:'Límite de herencia en EE.UU. para no residentes', sp500_2008:'Caída del S&P 500 en 2008', tipo_cambio:'Tipo de cambio'}],
+  ['IGSS, pensión e impuestos', {igss_subsidio_frac:'Subsidio del IGSS por enfermedad', igss_subsidio_tope:'Tope diario del subsidio', igss_subsidio_max:'Duración máxima del subsidio', igss_cuota_laboral:'Cuota laboral del IGSS', ivs_requisitos:'Requisitos de la pensión del IGSS', ivs_min_max:'Pensión mínima y máxima', ivs_formula:'Fórmula de la pensión', isr_tarifa:'ISR para asalariados', isr_deducciones_2026:'Deducciones del ISR 2026', planilla_iva_tope:'Tope de la planilla del IVA', bono14:'Bono 14', aguinaldo:'Aguinaldo'}],
+  ['Vivienda', {hipo_prom_mn:'Tasa promedio de créditos de vivienda en quetzales', hipo_prom_me:'Tasa promedio de créditos de vivienda en dólares', hipo_enganche:'Enganche que suelen pedir', hipo_plazo_max:'Plazo máximo publicado', iva_primera_venta:'IVA en la primera venta', timbres_reventa:'Timbres en la reventa', notario_arancel:'Arancel del notario (sin pacto)', rgp_inscripcion:'Inscripción en el Registro de la Propiedad', iusi_escala:'IUSI, escala anterior', iusi_reforma:'IUSI desde el 26-nov-2026', isr_ganancia_inmueble:'ISR al vender un inmueble', isr_rentas_inmueble:'ISR sobre rentas de inmuebles', lab1_proyectos:'Proyectos por zona del Lab 1', lab1_caprate:'Rendimiento de rentas de apartamentos', fopavi:'Subsidio del FOPAVI', promesa_plazo_max:'Plazo máximo de una promesa de compraventa', lotes_sin_licencia:'Lotificadoras sin licencia'}],
+  ['Desarrollo inmobiliario (Lab 3 Pro)', {isr_utilidades:'ISR, régimen sobre las utilidades', isr_opcional:'ISR, régimen opcional simplificado', licencia_muni:'Licencia municipal de construcción', marn_instrumento:'Instrumento ambiental del MARN', credito_empresarial:'Tasa de crédito empresarial', vp_precio_max:'Precio máximo de vivienda prioritaria', mpc_credito:'Crédito de Mi Primera Casa', absorcion_vp:'Ventas al mes en vivienda prioritaria', rango_que_rota:'Lo que más se vende en la ciudad'}],
+  ['Cómo vivimos el dinero', {findex_emergencia:'Cómo cubrirían una emergencia, de cada 100', enifh:'Encuesta Nacional de Inclusión Financiera', informalidad:'Personas que trabajan sin contrato formal', gasto_bolsillo_salud:'Gasto en salud que sale del bolsillo', compromiso_ahorro:'Cuentas de ahorro con compromiso (Filipinas)', recordatorios:'Recordatorios de ahorro (Bolivia, Perú, Filipinas)', dar_experimento:'Gastar en otros y felicidad (experimento)', dar_paises:'Gastar en otros y bienestar (136 países)', dar_brooks:'Dar dinero o tiempo y satisfacción con la vida'}],
+  ['Ofertas de riesgo', {day_trading_pierde:'Day traders que perdieron dinero', piramides_afectados:'Personas afectadas por pirámides', mlm_ftc_17:'Multiniveles donde la mayoría no ganó nada', mlm_ftc:'Ingreso anual de la mayoría en multiniveles', juego_trastorno:'Problema de juego entre quienes apuestan en línea', juego_sin_regulador:'Regulador del juego en línea', mp_fraude_diario:'Denuncias de fraude digital al día', mp_fraude_facebook:'Fraudes digitales que vienen de Facebook'}]
+];
+const V = {
+  tc_tasa_mensual_rango: v => `${P(v[0])} a ${P(v[1])} al mes`, tc_pago_min_pct: v => `${P(v)} del saldo más intereses`, tc_tope_tasa: () => 'No existe',
+  tc_convenio_atrasos: v => `Desde ${v} atrasos`, sib_historial_meses: v => `Últimos ${v} meses`, bono_cupon: v => `${P(v.a1)} / ${P(v.a2)} / ${P(v.a3)}`,
+  bono_vencimiento: v => `${v.a1} / ${v.a2} / ${v.a3}`, bono_cupo_pi: v => `Q${v.libre} millones libres de Q${v.total} millones`, bono_exento: () => 'Exento', bono_secundario: () => 'Se pueden vender a otro inversionista',
+  bvn_comision: v => `${P(v[0])} a ${P(v[1])}`, eeuu_herencia_ex: v => `US$${v.toLocaleString('en-US')}`, tipo_cambio: v => `Q${v.toFixed(4)} por dólar`,
+  igss_subsidio_frac: () => '2/3 del salario diario, desde el día 4', igss_subsidio_tope: v => `${Q(v)} al día`, igss_subsidio_max: v => `${v.semanasEnf} semanas por enfermedad; ${v.semanas24m} en 24 meses`,
+  ivs_requisitos: v => `${v.edad} años y ${v.cuotas} cuotas`, ivs_min_max: v => `${Q(v.min)} / ${Q(v.max)} al mes`, ivs_formula: () => '50% del salario promedio + 0.5% por semestre arriba de 120 cuotas',
+  isr_tarifa: v => `${P(v.tasa)} hasta ${Q(v.hasta)}`, isr_deducciones_2026: v => `${Q(v.fija)} fija + ${Q(v.extra)} extraordinaria`, bono14: () => 'Un salario, en julio', aguinaldo: () => 'Un salario, en diciembre',
+  hipo_enganche: v => `Desde ${P(v.fha)} con FHA; ${P(v.banco)} en bancos`, hipo_plazo_max: v => `${v} años`, notario_arancel: v => `Q${v.base} + ${P(v.pct)} del valor`,
+  rgp_inscripcion: v => `Desde Q${v.min}, + Q${v.porMil} por millar`, iusi_escala: () => '2, 6 y 9 por millar según el valor', iusi_reforma: () => 'Vivienda: 0 por millar; otros usos: 3, 6 y 9',
+  isr_ganancia_inmueble: () => 'Exento para personas individuales desde 2027', isr_rentas_inmueble: v => `${P(v.tasa)} sobre la renta, con ${P(v.deduccion)} de deducción`,
+  lab1_proyectos: v => `${Object.values(v).reduce((t,z) => t+z[0], 0)} proyectos en ${Object.keys(v).length} zonas`, lab1_caprate: v => `${P(v.A)} a ${P(v.C)} al año`,
+  isr_opcional: v => `${P(v.tasa1,0)} hasta ${Q(v.hasta)} al mes y ${P(v.tasa2,0)} sobre el excedente`, licencia_muni: v => `${P(v.tasa)} sobre ${Q(v.valorM2)} por m²; vivienda social exenta`,
+  marn_instrumento: v => `${Q(v.B2.consultor + v.B2.arancel)} (B2) a ${Q(v.B1.consultor + v.B1.arancel)} (B1)`, vp_precio_max: v => Q(v), mpc_credito: v => `${P(v.tasa91)} o ${P(v.tasa170)}, ${P(v.enganche,0)} de enganche, ${v.anios} años`,
+  absorcion_vp: v => `${v.min} a ${v.max} unidades al mes; hasta ${v.techo} en los mejores`, rango_que_rota: v => `${Q(v.min)} a ${Q(v.max)}, de ${v.m2min} a ${v.m2max} m²`,
+  fopavi: v => `Hasta ${Q(v.monto)}; aporte de ${Q(v.aporte)}; ingresos hasta ${v.salariosMax} salarios mínimos`, promesa_plazo_max: v => `${v} años`, lotes_sin_licencia: v => `Más de ${v}`,
+  findex_emergencia: v => `${v.pueden} podrían · ${v.dificil} con mucha dificultad · ${v.ahorros} con ahorros · ${v.familia} con familia`,
+  enifh: v => `${v.tarjeta}% con tarjeta · ${v.seguro}% con seguro · ${v.noSabeQueja}% no sabe dónde quejarse · ${v.noAlcanza}% dice que no le alcanza`,
+  informalidad: v => `${v}%`, gasto_bolsillo_salud: v => `${v}%`, compromiso_ahorro: v => `La aceptó ${v.acepto}%; ahorro ${v.aumento} puntos mayor`, recordatorios: v => `+${v.general}% en general; +${v.especifico}% si dicen la meta`,
+  dar_experimento: v => `US$${v.montos[0]} o US$${v.montos[1]} gastados en otros: más felicidad al final del día`, dar_paises: v => `Relación positiva en ${v.positivos} de ${v.paises} países`, dar_brooks: () => 'Quienes dan dicen estar más satisfechos y con menos estrés',
+  day_trading_pierde: v => `${v} de cada 100`, piramides_afectados: v => `Más de ${v.toLocaleString('en-US')}`, mlm_ftc_17: v => `Al menos ${v} empresas`, mlm_ftc: v => `US$${v.toLocaleString('en-US')} o menos`,
+  juego_trastorno: v => `${v.casino}% en casino · ${v.deportes}% en apuestas deportivas`, juego_sin_regulador: () => 'No existe', mp_fraude_diario: v => `Unas ${v}`, mp_fraude_facebook: v => `${v}%`
+};
+const valor = (k, v) => V[k] ? V[k](v) : typeof v==='number' ? (Math.abs(v)<1 ? P(v) : v>=1000 ? Q(v) : String(v)) : String(v);
+const TIPO = {oficial:'Oficial', prensa:'Fuente secundaria', academico:'Estudio académico', umbral:'Datos de UMBRAL'};
+
+let filtro = 'todos';
+function pantalla(){
+  const n = Object.keys(D).length, sec = Object.values(D).filter(d => d.conf==='prensa').length;
+  $app.innerHTML = `
+    <p class="ceja">Laboratorio 3 · Transparencia</p>
+    <h1>De dónde salen los datos</h1>
+    <p>Todas las herramientas usan los mismos ${n} datos públicos. Cada uno tiene su fuente y su fecha. Esta lista se genera del mismo archivo que usan los cálculos: si un dato cambia, cambia aquí y en todas las herramientas.</p>
+    <div class="nota-lab"><b>Cómo leer esta lista</b><p class="chico" style="margin:0"><b>Oficial:</b> sale directamente de una institución pública o de la ley. <b>Fuente secundaria:</b> la tomamos de prensa o de una guía que cita la fuente oficial, pero no pudimos ver el documento original (son ${sec}); conviene confirmarla. <b>Estudio académico:</b> investigación publicada. <b>Datos de UMBRAL:</b> recopilados por el laboratorio.</p></div>
+    ${U.chips('f', [['todos','Todos'],['oficial','Oficiales'],['prensa','Secundarios']], filtro, 'Filtrar')}
+    <div id="lista"></div>
+    <h2>Supuestos de UMBRAL</h2>
+    <p class="chico">Además de los datos, las herramientas usan algunas referencias propias. No son reglas oficiales: son puntos de partida razonables que se pueden discutir.</p>
+    <ul class="chico">
+      <li>Que tus deudas y tu vivienda no se lleven más de ${P(M.SUP.cuotaMaxPct)} de tu ingreso.</li>
+      <li>Fondo de emergencia: 1 mes de gastos para arrancar, ${M.SUP.mesesFondo} meses como meta y ${M.SUP.mesesFondoUnico} si tu ingreso es el único del hogar.</li>
+      <li>Una inversión que promete ${P(M.SUP.rendSospechoso)} al mes o más se marca como señal de alerta.</li>
+      <li>Para el retiro, 20 años de retiro sin rendimiento durante ese tiempo: un escenario prudente.</li>
+      <li>Los escenarios de precio de la vivienda (no sube, sube como la inflación, sube 6%) son supuestos, no pronósticos.</li></ul>
+    <h2>Cómo se calcula</h2>
+    <ul class="chico">
+      <li><b>Cuotas de préstamos y de vivienda:</b> cuota fija con interés sobre saldo, la fórmula que usan los bancos.</li>
+      <li><b>Tarjetas con pago mínimo:</b> mes a mes, con el mínimo de ${P(D.tc_pago_min_pct.v)} del saldo más intereses y el piso de ${Q(D.tc_pago_min_piso.v)}.</li>
+      <li><b>Rendimiento real:</b> lo que gana el dinero después de ISR, menos la inflación.</li>
+      <li><b>Tasa escondida en una cuota:</b> la tasa que iguala el precio de contado con las cuotas que se pagan.</li></ul>
+    ${U.notaLab()}
+    ${U.pie()}`;
+  U.enlazarChips($app, 'f', v => { filtro = v; lista(); });
+  lista();
+}
+function lista(){
+  document.getElementById('lista').innerHTML = TEMAS.map(([tema, claves]) => {
+    const filas = Object.keys(claves).filter(k => D[k] && (filtro==='todos' || D[k].conf===filtro)).map(k => { const d = D[k];
+      return `<article class="lugar-g dato-f"><h3>${esc(claves[k])}${d.conf==='prensa' ? ' <span class="sello">Fuente secundaria</span>' : ''}</h3>
+        <p class="dato-v">${esc(valor(k, d.v))}</p>
+        <p class="suave chico" style="margin:0">${esc(d.fuente)} · ${esc(d.etiqueta)} · ${TIPO[d.conf] || d.conf}${d.frec ? ` · se actualiza ${d.frec==='diaria' ? 'a diario' : 'cada mes'}` : ''}</p></article>`; }).join('');
+    return filas ? `<h2>${esc(tema)}</h2>${filas}` : '';
+  }).join('');
+}
+pantalla();
+})();
+
+</script>
+</body>
+</html>

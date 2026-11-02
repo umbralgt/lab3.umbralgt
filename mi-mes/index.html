@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mi mes · Lab 3 · UMBRAL</title>
+<meta name="description" content="Lo que entra, lo que sale y tres sobres para lo que queda. Una calculadora gratuita, sin venta, que no sale de tu teléfono.">
+<meta property="og:title" content="Mi mes · UMBRAL Lab 3">
+<meta property="og:description" content="Lo que entra, lo que sale y tres sobres para lo que queda. Una calculadora gratuita, sin venta, que no sale de tu teléfono.">
+<meta property="og:type" content="website"><meta property="og:url" content="https://lab3.umbralgt.com/mi-mes/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Sistema visual UMBRAL (Lab 1 y Lab 2). Color: blanco y negro de base; azul #2f5bd3 como único acento;
+   verde, ámbar y rojo solo para el semáforo y los errores, siempre en tinte suave (igual que .traffic-* de Lab 1);
+   otros colores (morado, naranja, verde de mapa) solo para distinguir categorías de datos, como las capas de Lab 1. */
+:root{
+  --negro:#0a0a0a; --blanco:#ffffff; --suelo:#f4f4f2; --g200:#efefef; --g300:#e3e3e3; --g400:#cfcfcf; --g600:#6b6b6b;
+  --azul:#2f5bd3; --azul-claro:#eef2fc;
+  --verde:#1f7a3b; --verde-claro:#e7f6ec; --ambar:#c79200; --ambar-claro:#fff7da; --rojo:#c0392b; --rojo-claro:#ffe3e3;
+  --linea:1.5px solid var(--negro); --suave:1px solid var(--g300);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(54px + env(safe-area-inset-top,0px))}
+body{margin:0;background:var(--blanco);color:var(--negro);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--negro)}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+
+/* Barra de navegación, igual a Lab 1 y Lab 2 */
+#nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;height:54px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--blanco);border-bottom:var(--linea)}
+#nav .logo{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--negro);text-decoration:none;white-space:nowrap}
+#nav .mods{display:flex;gap:4px;flex:1;justify-content:center}
+#nav .mod{padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--g600);border-radius:6px;text-decoration:none}
+#nav .mod.activo{color:var(--negro);background:var(--g200)}
+#nav .volver{margin-left:auto;display:inline-flex;gap:8px;padding:8px 14px;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:500;border-radius:8px;text-decoration:none;white-space:nowrap}
+#nav .logo{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#nav .volver{flex:none}
+@media (max-width:560px){#nav .mods{display:none}#nav{padding:0 14px;gap:8px}#nav .volver{padding:8px 12px}}
+
+main{max-width:680px;margin:0 auto;padding:28px 20px 48px}
+.ceja{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin:0 0 10px}
+h1{font-size:2.1rem;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:0 0 14px}
+h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:36px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--g300)}
+h3{font-size:1rem;font-weight:700;margin:0 0 6px}
+p{margin:0 0 14px}
+.suave{color:var(--g600)}
+.chico{font-size:.88rem;line-height:1.5}
+.nota-lab{border:var(--linea);border-radius:8px;padding:14px 16px;margin:20px 0}
+.nota-lab b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.aviso{background:var(--ambar-claro);border:1.5px solid var(--ambar);border-radius:8px;padding:10px 14px;font-size:.85rem;color:var(--ambar);margin:0 0 20px}
+.aviso strong{font-weight:700}
+.btn{display:block;width:100%;padding:13px;border:var(--linea);border-radius:8px;background:var(--negro);color:var(--blanco);font-size:15px;font-weight:700;text-align:center}
+.btn:hover{opacity:.88}
+.btn.sec{background:var(--blanco);color:var(--negro)}
+.btn.sec:hover{background:var(--g200);opacity:1}
+.enlace{background:none;border:0;padding:4px 0;color:var(--negro);text-decoration:underline;text-underline-offset:3px;font-size:.95rem}
+.fila{display:flex;gap:10px;margin-top:20px}
+.fila .btn{flex:1}
+
+/* Pregunta */
+.avance{height:4px;background:var(--g300);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.avance i{display:block;height:100%;background:var(--negro);transition:width .3s}
+.bloque{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:24px}
+.pregunta{font-size:1.55rem;line-height:1.25;letter-spacing:-.02em;font-weight:700;margin:0 0 8px}
+.opciones{display:grid;gap:8px;margin-top:20px}
+.op{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border-radius:8px;border:1.5px solid var(--g400);background:var(--blanco);font-size:1rem;font-weight:500}
+.op:hover{border-color:var(--negro)}
+.op[aria-pressed="true"]{border-color:var(--negro);background:var(--negro);color:var(--blanco)}
+.op .caja{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor}
+.op.multi .caja{border-radius:4px}
+.op[aria-pressed="true"] .caja{background:var(--blanco);box-shadow:inset 0 0 0 3px var(--negro)}
+.monto{display:flex;align-items:center;border:1px solid var(--g400);border-radius:8px;background:var(--suelo);margin-top:20px}
+.monto:focus-within{border-color:var(--negro);background:var(--blanco);box-shadow:0 0 0 1px var(--negro)}
+.monto span{padding:0 2px 0 16px;font-size:1.5rem;font-weight:700;color:var(--g600)}
+.monto input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:1.5rem;font-weight:700;padding:12px 16px 12px 4px;color:var(--negro)}
+.monto input:focus{outline:none}
+.unidad{display:flex;gap:8px;margin-top:10px}
+.unidad .op{flex:1;justify-content:center;padding:10px}
+.nose{margin-top:10px}
+.ayuda{margin-top:16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.help-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--negro);background:var(--blanco);font-size:12px;font-weight:700;color:var(--negro);padding:0;line-height:1}
+.help-icon:hover,.help-icon[aria-expanded="true"]{background:var(--negro);color:var(--blanco)}
+.help-lbl{font-size:.9rem;color:var(--g600)}
+.help-bubble{flex-basis:100%;background:var(--blanco);border:1.5px solid var(--negro);border-radius:10px;padding:12px 14px;font-size:.92rem;line-height:1.65;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.error{color:var(--rojo);font-size:.95rem;margin-top:8px;min-height:1.4rem}
+
+/* Escalera */
+.lugar{font-size:2rem;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:4px 0 8px}
+.escalera{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column-reverse}
+.peldano{display:flex;align-items:center;gap:14px;padding:7px 0}
+.peldano .travesano{flex:none;width:72px;height:12px;border:1.5px solid var(--g400);border-radius:2px;position:relative}
+.peldano .travesano::before,.peldano .travesano::after{content:"";position:absolute;top:-10px;bottom:-10px;width:1.5px;background:var(--g400)}
+.peldano .travesano::before{left:-1.5px}.peldano .travesano::after{right:-1.5px}
+.peldano.hecho .travesano{background:var(--negro);border-color:var(--negro)}
+.peldano.aqui .travesano{background:var(--azul);border-color:var(--azul);height:16px}
+.peldano .nombre{font-size:.95rem;color:var(--g600)}
+.peldano.hecho .nombre{color:var(--negro)}
+.peldano.aqui .nombre{color:var(--azul);font-weight:700}
+.peldano.lejos{opacity:.55}
+
+/* Tropiezo */
+.tropiezo{border:var(--linea);border-radius:10px;padding:16px;margin-top:12px}
+/* Semáforo como el traffic-box de Lab 1: tinte suave, borde del mismo tono, sin mayúsculas */
+.semaforo{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:3px 10px;border-radius:6px;border:1.5px solid}
+.semaforo::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.semaforo.verde{color:var(--verde);background:var(--verde-claro)}
+.semaforo.amarillo{color:var(--ambar);background:var(--ambar-claro)}
+.semaforo.rojo{color:var(--rojo);background:var(--rojo-claro)}
+.cifra{font-size:1.8rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin:10px 0 6px}
+.pestanas{display:flex;gap:0;border:var(--linea);border-radius:8px;overflow:hidden;width:fit-content;margin:4px 0 14px}
+.pestanas .op{border:0;border-radius:0;padding:8px 14px;font-size:12px;font-weight:700}
+.pestanas .op .caja{display:none}
+.compara{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.compara div{background:var(--suelo);border:var(--suave);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.compara b{display:block;font-size:1.2rem;letter-spacing:-.02em}
+.calma{background:var(--suelo);border:var(--linea);border-radius:10px;padding:16px;margin-top:20px}
+
+/* Hallazgos */
+.hallazgo{border:var(--suave);border-radius:10px;padding:16px;margin-top:10px}
+.familia{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:6px}
+.hallazgo .vimos{font-weight:700;font-size:1.08rem;letter-spacing:-.01em;margin-bottom:8px}
+.de100{border-left:3px solid var(--azul);background:var(--azul-claro);padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0}
+.paso{margin-top:10px}
+.nota{font-size:.85rem;color:var(--g600);margin-top:8px}
+.pie{font-size:.8rem;color:var(--g600);border-top:var(--suave);margin-top:12px;padding-top:8px}
+.marca-verif{display:inline-block;font-size:12px;font-weight:700;border:1.5px solid var(--ambar);color:var(--ambar);background:var(--ambar-claro);padding:2px 8px;border-radius:6px;margin-top:8px}
+
+/* Cómo funciona */
+.tabla{overflow-x:auto;margin:12px 0;border:var(--suave);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.82rem;min-width:30rem}
+th,td{text-align:left;padding:7px 9px;border-bottom:var(--suave);vertical-align:top}
+th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--g600)}
+
+footer{background:#0a0a0a;padding:28px 20px;margin-top:48px}
+.pie-in{max-width:680px;margin:0 auto}
+footer .lema{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.02em;margin:0 0 6px}
+footer .per{font-size:12px;color:#777;font-style:italic;margin:0 0 20px}
+.pie-fila{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid #1e1e1e}
+.pie-fila span{font-size:11px;color:#777;font-weight:500}
+.pie-fila a{display:inline-flex;gap:8px;padding:7px 14px;background:#fff;color:#0a0a0a;font-size:11px;font-weight:500;border-radius:8px;text-decoration:none}
+
+/* v1.1: ajustes de la primera prueba con usuario */
+.porque{background:var(--suelo);border-left:3px solid var(--azul);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.92rem;margin:10px 0 0}
+.term{display:inline;background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:help}
+.def{display:block;background:var(--blanco);color:var(--negro);border:1.5px solid var(--negro);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:.92rem;font-weight:400;line-height:1.55;letter-spacing:0;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.def b{font-weight:700}
+.term[aria-expanded="true"]{background:var(--azul-claro)}
+.explica{border:1.5px solid var(--negro);border-radius:10px;padding:12px 14px;margin-top:12px}
+.explica b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.explica p{margin:0}
+.desglose{display:grid;gap:8px;margin-top:20px}
+.fila-gasto{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.fila-gasto .lbl{flex:1;font-weight:600;font-size:.98rem;line-height:1.3}
+.fila-gasto small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.chico-monto{margin-top:0;width:9rem;flex:none}
+.chico-monto span{font-size:1rem;padding-left:12px}
+.chico-monto input{font-size:1.05rem;padding:9px 10px 9px 2px}
+.total-gasto{display:flex;justify-content:space-between;border-top:var(--linea);padding-top:10px;margin-top:4px;font-weight:700}
+.resumen{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.dato{border:var(--suave);border-radius:10px;padding:12px}
+.dato span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600)}
+.dato b{display:block;font-size:1.35rem;letter-spacing:-.02em}
+.dato small{display:block;font-size:.78rem;color:var(--g600);line-height:1.35}
+.pasos-esc{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
+.paso-esc{display:flex;gap:12px;padding:12px;border:var(--suave);border-radius:10px}
+.paso-esc .marca{flex:none;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:1.5px solid var(--g400);color:var(--g600)}
+.paso-esc.cumple .marca{background:var(--negro);color:var(--blanco);border-color:var(--negro)}
+.paso-esc.aqui{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.paso-esc.aqui .marca{border-color:var(--azul);color:var(--azul)}
+.paso-esc.despues{opacity:.7}
+.paso-esc p{margin:4px 0 0;font-size:.93rem}
+.etq{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin:12px 0 2px}
+.hallazgo .vimos{margin-bottom:4px}
+.siguiente{border:var(--linea);border-radius:10px;padding:16px}
+.siguiente .etq{margin-top:0}
+.sig-texto{font-size:1.25rem;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.mini-esc{margin:0 0 14px;padding:0;list-style:none;counter-reset:p;display:grid;gap:6px}
+.mini-esc li{counter-increment:p;display:flex;gap:10px;align-items:baseline;font-size:.95rem;color:var(--g600)}
+.mini-esc li::before{content:counter(p);flex:none;width:22px;height:22px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transform:translateY(4px)}
+.mini-esc b{color:var(--negro)}
+
+/* v1.2: segunda prueba con usuario */
+.breve{border:var(--linea);border-radius:10px;padding:16px;margin-top:4px}
+.breve:focus{outline:none}
+.breve .lugar{font-size:1.6rem}
+.breve .siguiente{margin-top:14px;background:var(--azul-claro);border:1.5px solid var(--azul)}
+.bloque-r{border:var(--linea);border-radius:10px;margin-top:10px}
+.bloque-r summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.bloque-r summary::-webkit-details-marker{display:none}
+.bloque-r .num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.bloque-r .tit{flex:1}
+.bloque-r .tit b{display:block;font-size:1.02rem;letter-spacing:-.01em}
+.bloque-r .tit small{display:block;color:var(--g600);font-size:.85rem;line-height:1.4}
+.bloque-r .flecha{font-size:1.4rem;transition:transform .2s}
+.bloque-r[open] .flecha{transform:rotate(90deg)}
+.bloque-c{padding:0 16px 16px}
+.nivel{border:var(--suave);border-radius:10px;padding:12px;margin-top:8px}
+.nivel-cab{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.nv{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;border:1.5px solid}
+.nv-riesgo{color:var(--rojo);background:var(--rojo-claro)}
+.nv-minimo{color:var(--ambar);background:var(--ambar-claro)}
+.nv-bien,.nv-ideal{color:var(--verde);background:var(--verde-claro)}
+.nivel-dato{margin:6px 0 8px;font-size:.95rem}
+.barra{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.seg{height:8px;border-radius:2px;background:var(--g300)}
+.seg.lleno{border:0}
+.seg.lleno.nv-riesgo{background:var(--rojo)}.seg.lleno.nv-minimo{background:var(--ambar)}.seg.lleno.nv-bien,.seg.lleno.nv-ideal{background:var(--verde)}
+.barra-et{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:4px}
+.barra-et span{font-size:10px;color:var(--g600);line-height:1.2}
+.nivel-sig{font-size:.88rem;margin:8px 0 0}
+.grupo{margin-top:14px}
+.grupo>h3{margin-bottom:2px}
+
+/* v1.3 */
+.compara.tres{grid-template-columns:1fr}
+@media (min-width:520px){.compara.tres{grid-template-columns:repeat(3,1fr)}}
+.compara span{display:block;font-size:.85rem;color:var(--g600)}
+.nivel-sig{font-size:.9rem;margin:10px 0 0;background:var(--suelo);border-radius:8px;padding:8px 10px}
+.alerta{border:var(--suave);border-radius:10px;padding:14px;margin-top:10px}
+.alerta.marcada{border:1.5px solid var(--ambar)}
+.alerta h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.alerta .etq{margin-top:8px}
+.alerta p{margin-bottom:4px}
+
+/* Mi fondo de emergencia */
+.probar{border:var(--linea);border-radius:10px;padding:14px 16px;margin-top:12px}
+.probar label{display:block;font-size:.95rem}
+.probar input[type=range]{width:100%;margin:10px 0 4px;accent-color:var(--azul)}
+.probar .chk{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:.92rem}
+.probar .chk input{width:18px;height:18px;accent-color:var(--azul)}
+.grafica{margin:4px 0 12px;position:relative}
+.grafica svg{width:100%;height:auto;display:block;touch-action:pan-y}
+.g-base{stroke:var(--g400);stroke-width:1}
+.g-meta{stroke:var(--g400);stroke-width:1;stroke-dasharray:4 4}
+.g-et{font-size:10px;fill:var(--g600);font-family:inherit}
+.g-ax{font-size:9.5px;fill:var(--g600);font-family:inherit}
+.g-linea{fill:none;stroke:var(--azul);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.g-hito{fill:var(--azul);stroke:var(--blanco);stroke-width:2}
+.g-cruz{stroke:var(--negro);stroke-width:1}
+.g-tip{position:absolute;top:0;left:0;background:var(--blanco);border:1.5px solid var(--negro);border-radius:8px;padding:4px 8px;font-size:.82rem;pointer-events:none}
+.hitos{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.hitos li{border:var(--suave);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.hitos li.hecho{border-color:var(--verde);background:var(--verde-claro)}
+.hitos span{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+.hitos small{color:var(--g600);font-size:.82rem}
+.lugar-g{border:var(--suave);border-radius:10px;padding:12px 14px;margin-top:10px}
+.lugar-g.actual{border:1.5px solid var(--ambar)}
+.lugar-g h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lugar-g dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:8px 0;font-size:.9rem}
+.lugar-g dt{color:var(--g600)}
+.lugar-g dd{margin:0}
+.progreso{background:var(--verde-claro);border:1.5px solid var(--verde);border-radius:10px;padding:12px;margin-bottom:12px}
+.breve .lugar .nv{font-size:14px}
+
+/* v0.2: calculadora en una sola pantalla */
+.origen{border-left:3px solid var(--azul);background:var(--azul-claro);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.92rem;margin:12px 0}
+.origen.ejemplo{border-left-color:var(--ambar);background:var(--ambar-claro)}
+.calc{border:var(--linea);border-radius:10px;padding:14px 16px;display:grid;gap:10px;margin-top:12px}
+.campo{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.campo>span:first-child{font-weight:600;font-size:.97rem;line-height:1.3}
+.campo small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.calc input[type=range]{width:100%;accent-color:var(--azul);margin:0}
+.extras{border-top:var(--suave);padding-top:10px;display:grid;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip-b{border:1.5px solid var(--g400);background:var(--blanco);border-radius:8px;padding:6px 12px;font-size:.88rem;font-weight:600}
+.chip-b[aria-pressed="true"]{background:var(--negro);border-color:var(--negro);color:var(--blanco)}
+#c-extra-det{display:grid;gap:8px}
+.breve .lugar{font-size:1.2rem;line-height:1.35;letter-spacing:-.01em;font-weight:500}
+.breve .lugar b{font-weight:700}
+
+.cumplir{border:var(--linea);border-radius:10px;padding:16px;margin-top:16px}
+.accion{border-top:var(--suave);padding-top:12px;margin-top:12px}
+.accion h3{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.accion .num{flex:none;width:22px;height:22px;border-radius:50%;background:var(--azul);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.accion p{margin-bottom:6px}
+.oculto{display:none!important}
+
+/* ===== Lab 3 · base común de herramientas (v1.0) ===== */
+/* Barrita de la escalera: los 6 peldaños, el actual en negro, el tuyo marcado en azul */
+#barrita{border-bottom:var(--suave);background:var(--blanco)}
+.barrita{max-width:680px;margin:0 auto;padding:10px 20px 8px}
+.barrita-cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600);margin-bottom:6px}
+.barrita-cab a{color:var(--g600);text-decoration:underline;text-underline-offset:2px;text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
+.barrita ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.barrita li a{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:4px 0 2px;border-radius:8px}
+.barrita li a:hover{background:var(--g200)}
+.barrita .bn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--g400);color:var(--g600);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;background:var(--blanco)}
+.barrita .bl{font-size:10.5px;line-height:1.15;color:var(--g600);text-align:center}
+.barrita li.actual .bn{background:var(--negro);border-color:var(--negro);color:var(--blanco)}
+.barrita li.actual .bl{color:var(--negro);font-weight:700}
+.barrita li.tuyo .bn{box-shadow:0 0 0 2px var(--blanco),0 0 0 4px var(--azul)}
+.barrita li.hecho .bn{border-color:var(--negro);color:var(--negro)}
+.barrita-nota{font-size:11.5px;color:var(--g600);margin:6px 0 0;line-height:1.35}
+.barrita-nota b{color:var(--azul)}
+
+/* Filas editables (deudas, metas) */
+.filas{display:grid;gap:10px}
+.fila-e{border:var(--suave);border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.fila-e-cab{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.fila-e-cab input{flex:1;min-width:0;border:0;border-bottom:1px dashed var(--g400);font:inherit;font-weight:700;font-size:1rem;padding:2px 0;background:transparent}
+.fila-e-cab input:focus{outline:none;border-bottom-color:var(--negro)}
+.quitar{border:0;background:none;color:var(--g600);font-size:.85rem;text-decoration:underline;padding:2px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{display:grid;gap:3px;font-size:.8rem;color:var(--g600);font-weight:600}
+.mini .monto{margin:0}
+.mini .monto span{font-size:.95rem;padding-left:10px}
+.mini .monto input{font-size:1rem;padding:8px 8px 8px 2px;font-weight:700}
+.mini .monto em{font-style:normal;font-size:.8rem;color:var(--g600);padding-right:10px;white-space:nowrap}
+.agregar{border:1.5px dashed var(--g400);background:var(--blanco);border-radius:10px;padding:10px;font-weight:600;font-size:.92rem;width:100%}
+.agregar:hover{border-color:var(--negro)}
+
+/* Barra apilada del ingreso */
+.apilada{display:flex;height:22px;border-radius:6px;overflow:hidden;border:1.5px solid var(--negro);margin:10px 0 8px}
+.apilada i{display:block;height:100%}
+.leyenda{list-style:none;padding:0;margin:0;display:grid;gap:4px;font-size:.9rem}
+.leyenda li{display:flex;align-items:center;gap:8px}
+.leyenda .cu{flex:none;width:12px;height:12px;border-radius:3px;border:1px solid var(--negro)}
+.leyenda .v{margin-left:auto;font-weight:700;white-space:nowrap}
+.c-basico{background:var(--negro)}.c-deuda{background:#6b6b6b}.c-var{background:#cfcfcf}.c-sobra{background:var(--azul)}.c-falta{background:repeating-linear-gradient(45deg,var(--rojo-claro),var(--rojo-claro) 4px,#f5b5b5 4px,#f5b5b5 8px)}
+.sobres{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.sobre{border:var(--linea);border-radius:10px;padding:10px;display:grid;gap:2px;align-content:start}
+.sobre span{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600)}
+.sobre b{font-size:1.15rem;letter-spacing:-.02em}
+.sobre small{font-size:.76rem;color:var(--g600);line-height:1.3}
+.sobre.futuro{border-color:var(--azul);background:var(--azul-claro)}
+@media (max-width:420px){.sobres{grid-template-columns:1fr}}
+
+/* Tarjetas de comparación de estrategias */
+.opciones3{display:grid;gap:8px;margin:10px 0}
+@media (min-width:560px){.opciones3{grid-template-columns:repeat(3,1fr)}}
+.op3{border:1.5px solid var(--g400);border-radius:10px;padding:12px;background:var(--blanco);text-align:left;display:grid;gap:2px;align-content:start}
+.op3[aria-pressed="true"]{border-color:var(--negro);box-shadow:inset 0 0 0 1px var(--negro)}
+.op3 .t{font-size:.82rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--g600)}
+.op3 b{font-size:1.25rem;letter-spacing:-.02em}
+.op3 small{font-size:.8rem;color:var(--g600);line-height:1.35}
+.op3.gris b{color:var(--g600)}
+.g-linea2{fill:none;stroke:var(--negro);stroke-width:2;stroke-linejoin:round}
+.g-linea3{fill:none;stroke:var(--g400);stroke-width:2;stroke-dasharray:5 4}
+.ley-g{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--g600);margin:2px 0 8px}
+.ley-g i{display:inline-block;width:16px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:5px}
+.orden{list-style:none;padding:0;margin:0;display:grid;gap:6px;counter-reset:o}
+.orden li{counter-increment:o;display:flex;gap:10px;align-items:baseline;border:var(--suave);border-radius:8px;padding:8px 10px;font-size:.93rem}
+.orden li::before{content:counter(o);flex:none;width:20px;height:20px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transform:translateY(3px)}
+.orden li span{margin-left:auto;font-weight:700;white-space:nowrap}
+
+/* Meses de protección */
+.meses-p{display:grid;gap:6px;margin:10px 0}
+.mes-p{display:grid;grid-template-columns:3.2rem 1fr;gap:8px;align-items:center;font-size:.82rem}
+.mes-p .pista{height:18px;border-radius:4px;background:var(--g200);overflow:hidden;display:flex}
+.mes-p .pista i{display:block;height:100%}
+.p-ingreso{background:var(--negro)}.p-fondo{background:var(--azul)}.p-falta{background:repeating-linear-gradient(45deg,var(--rojo-claro),var(--rojo-claro) 4px,#f5b5b5 4px,#f5b5b5 8px)}
+.lista-ok{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:6px}
+.lista-ok li{display:flex;gap:10px;align-items:flex-start;font-size:.93rem}
+.lista-ok input{flex:none;width:18px;height:18px;margin-top:3px;accent-color:var(--azul)}
+
+/* Metas */
+.meta-r{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-top:var(--suave);padding-top:8px;font-size:.92rem}
+.meta-r b{font-size:1.1rem;letter-spacing:-.02em;white-space:nowrap}
+.total-metas{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-top:var(--linea);padding-top:10px;margin-top:6px;font-weight:700}
+
+/* Comparador */
+.tabla td.num,.tabla th.num{text-align:right;white-space:nowrap}
+.tabla tr.destaca td{background:var(--azul-claro)}
+.sello{display:inline-block;font-size:10.5px;font-weight:700;border:1.5px solid var(--ambar);color:var(--ambar);background:var(--ambar-claro);padding:1px 6px;border-radius:5px;margin-left:4px;vertical-align:1px;white-space:nowrap}
+.revisor{border:1.5px solid var(--ambar);background:var(--ambar-claro);border-radius:10px;padding:14px 16px;margin-top:16px}
+.revisor .monto{background:var(--blanco)}
+.puente{display:flex;align-items:center;gap:12px;border:var(--linea);border-radius:10px;padding:14px 16px;margin-top:16px;text-decoration:none}
+.puente:hover{background:var(--suelo)}
+.puente .bn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--negro);color:var(--blanco);font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.puente span:nth-child(2){flex:1}
+.puente small{display:block;color:var(--g600);font-size:.85rem;line-height:1.35}
+.puente .flecha{font-size:1.3rem}
+.dos>*,.fila-e>*,.calc>*{min-width:0}
+.mini .monto input{width:100%;min-width:0}
+.fila-e .chips .chip-b{padding:6px 10px}
+.campo>.chips{flex:none;flex-wrap:nowrap}
+.lugar-g.destaca{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.lugar-g .cifras{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 4px}
+.lugar-g .cifras div{background:var(--blanco);border:var(--suave);border-radius:8px;padding:6px 8px}
+.lugar-g .cifras span{display:block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);line-height:1.2}
+.lugar-g .cifras b{font-size:1rem;letter-spacing:-.01em}
+/* Inversión v1.1: riesgo y encaje */
+.op-inv{display:grid;gap:6px}
+.op-inv h3{margin:0}
+.op-inv.encaja{border:1.5px solid var(--azul)}
+.encaje{margin:0;font-size:.85rem;font-weight:600;color:var(--g600)}
+.op-inv.encaja .encaje{color:var(--azul)}
+.riesgo{display:flex;align-items:center;gap:4px;font-size:.82rem}
+.riesgo span{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);margin-right:4px}
+.riesgo i{width:18px;height:8px;border-radius:2px;background:var(--g300)}
+.riesgo i.r-on{background:var(--negro)}
+.riesgo b{margin-left:6px;font-weight:600}
+.op-inv dl{margin:2px 0}
+.mas summary{cursor:pointer;font-size:.88rem;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.mas[open] summary{margin-bottom:6px}
+.op-inv dl{grid-template-columns:1fr;gap:0}
+.op-inv dt{font-size:.78rem;margin-top:6px}
+
+.sel{font:inherit;font-weight:700;border:1px solid var(--g400);border-radius:8px;background:var(--suelo);padding:9px 10px;width:9rem;flex:none}
+.barrita .bl{font-size:10px}
+@media (max-width:380px){.campo{flex-wrap:wrap}.campo>.chips{flex-wrap:wrap}}
+
+/* v1.1: hoja de la escalera y página de datos */
+.hoja{list-style:none;padding:0;margin:14px 0;display:grid;gap:8px}
+.hoja li{border:var(--suave);border-radius:10px;padding:12px 14px}
+.hoja li.aqui{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.hoja li.hecho{border-color:var(--verde)}
+.hoja-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hoja-cab .bn{flex:none;width:24px;height:24px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.dato-f h3{margin:0}
+.dato-v{font-size:1.1rem;font-weight:700;letter-spacing:-.01em;margin:4px 0}
+
+.solo-imprimir{display:none}
+@media print{
+  .solo-imprimir{display:block}
+  #nav,#barrita,footer,.no-imprimir,.nota-lab{display:none!important}
+  body{font-size:12px}
+  main{padding:0;max-width:none}
+  .hoja li{break-inside:avoid}
+  a{text-decoration:none;color:inherit}
+}
+
+.dar{border-top:var(--suave);margin-top:12px;padding-top:12px}
+.sobres:has(.sobre:nth-child(4)){grid-template-columns:repeat(2,1fr)}
+.dar .de100,.dar .de100 *{font-size:.88rem;line-height:1.5}.dar .de100 b{font-size:.88rem}
+/* Lab 3 Pro */
+.pro-modo{margin-top:6px}
+.pro-grid{display:grid;gap:12px;margin-top:12px}
+.pro-grid .calc{margin-top:0}
+.pro-grid.experto{grid-template-columns:1fr}
+@media (min-width:900px){ .pro-grid.experto{grid-template-columns:1fr 1fr} }
+.pro-c .monto em{font-style:normal;font-size:.78rem;color:var(--g600);padding-right:10px;white-space:nowrap}
+.pro-c .chico-monto{width:11rem}
+.explica ul li{margin-bottom:4px}
+.campo.apila{flex-wrap:wrap}.campo.apila>.chips{flex-wrap:wrap}
+.conecta{font-size:.88rem;line-height:1.5;margin:0;padding:8px 10px;border-left:3px solid var(--azul);background:var(--azul-claro);border-radius:0 8px 8px 0}
+.palancas{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}
+.palancas li{display:grid;grid-template-columns:1fr;gap:3px;border-bottom:var(--suave);padding-bottom:8px}
+.palancas .pt{font-size:.9rem;font-weight:600}
+.palancas .pb{height:8px;background:var(--g200);border-radius:4px;overflow:hidden}
+.palancas .pb i{display:block;height:100%;background:var(--azul);border-radius:4px}
+.palancas .pv{font-size:.95rem;font-weight:700}
+.palancas .pv small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.lecciones{display:grid;gap:8px}
+@media (min-width:760px){.lecciones{grid-template-columns:1fr 1fr}}
+.lecciones .bn{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;align-items:center;justify-content:center;margin-right:4px}
+.campo.apila>.chips{flex:1 1 100%;min-width:0}
+
+/* Pro: cadena "Cómo se conecta todo" */
+.cadena{border:1.5px solid var(--g300);border-radius:12px;padding:14px;margin:8px 0 4px}
+.cad-et{margin:0 0 8px;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--g600);font-weight:600}
+.cad-fila{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cad-caja{border:1px solid var(--g300);border-radius:8px;padding:8px 10px;min-width:0}
+.cad-caja b{display:block;font-size:.9rem;margin-bottom:2px}
+.cad-caja span{display:block;font-size:.82rem;color:var(--g600);line-height:1.4}
+.cad-flecha{margin:6px 0;text-align:center;color:var(--g600);font-size:1.1rem;line-height:1}
+.cad-cuenta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cad-cuenta>div{flex:1 1 0;min-width:0;border:1px solid var(--g300);border-radius:8px;padding:8px 10px}
+.cad-cuenta>div:last-child{border-color:var(--azul);background:var(--azul-claro)}
+.cad-cuenta span{display:block;font-size:.78rem;color:var(--g600)}
+.cad-cuenta b{display:block;font-size:.95rem}
+.cad-cuenta i{font-style:normal;font-weight:600;color:var(--g600)}
+.cad-final{border:1.5px solid var(--azul);background:var(--azul-claro);border-radius:10px;padding:10px 12px}
+.cad-final span{display:block;font-size:.8rem;color:var(--g600)}
+.cad-final b{display:block;font-size:1.5rem;color:var(--azul)}
+.cad-final p{margin:4px 0 0}
+.pro-aviso{margin-top:12px}
+@media (max-width:560px){.cad-fila{grid-template-columns:1fr}.cad-cuenta{flex-direction:column;align-items:stretch}.cad-cuenta i{text-align:center}}
+/* Pro: gráfica del dinero y secciones plegables */
+.g-tit{margin:0 0 2px;font-weight:600;font-size:1rem}
+.g-num{font-size:10px;font-weight:700;fill:var(--negro);font-family:inherit}
+.g-pasos{margin:8px 0 0;padding-left:1.4rem;font-size:.9rem;line-height:1.5}
+.g-pasos li{margin-bottom:3px}
+.ter-eq{display:block;margin-bottom:4px;color:var(--negro)}
+.pleg{border:1.5px solid var(--negro);border-radius:10px;margin:10px 0;background:var(--blanco)}
+.pleg>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px}
+.pleg>summary::-webkit-details-marker{display:none}
+.pleg>summary b{display:block;font-size:1rem}
+.pleg>summary small{display:block;font-size:.84rem;color:var(--g600);margin-top:1px}
+.pleg>summary i{flex:none;width:22px;height:22px;border:1.5px solid var(--negro);border-radius:50%;position:relative}
+.pleg>summary i::before,.pleg>summary i::after{content:"";position:absolute;left:5px;right:5px;top:50%;height:1.5px;margin-top:-.75px;background:var(--negro)}
+.pleg>summary i::after{transform:rotate(90deg);transition:transform .15s}
+.pleg[open]>summary i::after{transform:rotate(0)}
+.pleg[open]>summary{border-bottom:1px solid var(--g300)}
+.pleg-in{padding:4px 16px 14px}
+.pleg-in>h3:first-child,.pleg-in>p:first-child{margin-top:10px}
+/* Pro: camino del dinero, fuentes y equipo */
+.camino{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative}
+.camino li{position:relative;padding:22px 10px 0 0;min-width:0}
+.camino li::before{content:"";position:absolute;left:0;right:0;top:7px;height:1.5px;background:var(--negro)}
+.camino li:last-child::before{right:auto;width:14px}
+.camino li::after{content:"";position:absolute;left:0;top:1px;width:14px;height:14px;border-radius:50%;background:var(--blanco);border:1.5px solid var(--negro)}
+.camino li.peor::after{background:var(--rojo);border-color:var(--rojo)}
+.camino li.fin::after{background:var(--azul);border-color:var(--azul)}
+.camino li.fin.mal::after{background:var(--rojo);border-color:var(--rojo)}
+.cm-mes{display:block;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);font-weight:600}
+.camino b{display:block;font-size:.98rem;margin:2px 0}
+.cm-txt{display:block;font-size:.85rem;line-height:1.45;color:var(--g600)}
+.camino li.peor b{color:var(--rojo)}.camino li.fin b{color:var(--azul)}
+.fuentes{display:flex;height:22px;border-radius:6px;overflow:hidden;margin-top:6px;border:1px solid var(--negro)}
+.fuentes i{display:block;height:100%}
+.equipo{margin-top:18px;padding:16px 18px;border:1.5px solid var(--negro);border-radius:12px;border-left:6px solid var(--azul)}
+.ter-res{display:block;margin:4px 0 6px;padding:8px 10px;background:var(--azul-claro);border-radius:8px;color:var(--negro)}
+.conecta::before{content:"Para entenderlo, con un ejemplo general";display:block;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--azul);font-weight:600;margin-bottom:3px}
+@media (max-width:620px){
+  .camino{grid-template-columns:1fr}
+  .camino li{padding:0 0 16px 28px}
+  .camino li::before{left:6.5px;right:auto;top:16px;bottom:0;width:1.5px;height:auto}
+  .camino li:last-child::before{display:none}
+  .camino li::after{top:2px}
+}
+
+</style>
+</head>
+<body>
+<nav id="nav" aria-label="Laboratorio 3">
+  <a class="logo" href="https://lab3.umbralgt.com/">( U ) &nbsp; Lab 3 · Finanzas e Inversión</a>
+  <div class="mods"><a class="mod" href="https://lab3.umbralgt.com/escalera/">Escalera financiera</a><a class="mod" href="https://lab3.umbralgt.com/#herramientas">Herramientas</a></div>
+  <a class="volver" href="https://www.umbralgt.com">← umbralgt.com</a>
+</nav>
+<div id="barrita"></div>
+<main id="app" aria-live="polite"><noscript><p>Esta herramienta necesita JavaScript activado en el navegador.</p></noscript></main>
+<footer>
+  <div class="pie-in">
+    <p class="lema">explorar. contrastar. decidir.</p>
+    <p class="per">Per experimentum.</p>
+    <div class="pie-fila"><span>( UMBRAL ) · Lab 3 · Finanzas e Inversión · Ciudad de Guatemala · 2025–2027</span>
+      <a href="https://www.umbralgt.com" target="_blank" rel="noopener"><span>umbralgt.com</span><span aria-hidden="true">↗</span></a></div>
+  </div>
+</footer>
+<script>window.UMBRAL_URLS = {"portada": "https://lab3.umbralgt.com/", "escalera": "https://lab3.umbralgt.com/escalera/", "mes": "https://lab3.umbralgt.com/mi-mes/", "fondo": "https://lab3.umbralgt.com/fondo/", "deudas": "https://lab3.umbralgt.com/deudas/", "proteccion": "https://lab3.umbralgt.com/proteccion/", "metas": "https://lab3.umbralgt.com/metas/", "inversion": "https://lab3.umbralgt.com/inversion/", "vivienda": "https://lab3.umbralgt.com/vivienda/", "resumen": "https://lab3.umbralgt.com/mi-escalera/", "datos": "https://lab3.umbralgt.com/datos/", "pro": "https://lab3.umbralgt.com/pro/", "lab1": "https://lab1.umbralgt.com", "lab2": "https://lab2.umbralgt.com"};</script>
+<script src="/fin-motor.js"></script>
+<script src="/comun.js"></script>
+<script>
+// Peldaño 1 · Mi mes: que lo que entra cubra lo que sale, y repartir lo que sobra en tres sobres.
+(function(){
+'use strict';
+const M = window.FinMotor, U = window.U, $app = document.getElementById('app');
+if(!M || !U){ $app.innerHTML = '<p class="aviso"><strong>No se pudo cargar la herramienta.</strong> Revisá tu conexión y volvé a abrir la página.</p>'; return; }
+const Q = U.Q, D = M.DATOS;
+U.barrita(1); U.activarGlosario($app);
+
+const CATS = [['gv','Vivienda','Alquiler, mantenimiento'],['gc','Comida y súper',''],['gt','Transporte','Gasolina, bus, parqueo'],
+              ['gs','Servicios','Luz, agua, teléfono, internet'],['ge','Colegios y estudios',''],['go','Otros fijos','Salud, apoyo a tu familia, suscripciones']];
+const d = U.datos();
+const EJ = {i:8000, gv:2000, gc:2200, gt:700, gs:500, ge:0, go:600, deudas:900, variables:600, anual:3600};
+let origen = U.hayDatos() && d.i!=null ? 'lab' : 'ejemplo';
+const s = {};
+function cuotasDe(d){ // pagos de deudas al mes con los números de la escalera
+  if(d.co==null && d.ts==null) return null;
+  const x = M.contexto({q_tiene_tc: d.ts>0, q_saldo_tc: d.ts||0, q_tasa_tc: d.tt ? {v:d.tt, unidad:'anual'} : null, q_pago_tc: d.tp, q_cuotas_otras: d.co||0});
+  return Math.round(x.C||0);
+}
+if(origen==='lab'){
+  s.i = d.i; const tieneCat = CATS.some(c => d[c[0]]!=null);
+  s.modo = tieneCat ? 'cat' : 'total'; CATS.forEach(c => s[c[0]] = d[c[0]] ?? 0); s.g = d.g ?? null;
+  s.deudas = cuotasDe(d) ?? 0; s.variables = 0; s.anual = 0;
+} else { Object.assign(s, EJ); s.modo = 'cat'; }
+s.futuro = null; s.darOn = false; s.dar = null; let dia = '15';
+
+function basicos(){ return s.modo==='cat' ? CATS.reduce((t,c) => t + (s[c[0]]||0), 0) : (s.g||0); }
+function calc(){
+  const I = s.i||0, B = basicos(), De = s.deudas||0, V = s.variables||0, A12 = Math.round((s.anual||0)/12);
+  const disponible = I - B - De - A12;              // lo que queda para gustos y futuro
+  const sobraHoy = disponible - V;                  // lo que de verdad queda hoy
+  const futuro = s.futuro==null ? Math.max(0, Math.round(sobraHoy/50)*50) : Math.min(s.futuro, Math.max(0, disponible));
+  const dar = s.darOn && disponible - V >= 0 ? Math.min(Math.max(0, s.dar||0), Math.max(0, disponible - futuro)) : 0;
+  const gustos = Math.max(0, disponible - futuro - dar);
+  const pct = I ? sobraHoy/I : 0;
+  const nivel = sobraHoy<0 ? 'riesgo' : pct<0.10 ? 'minimo' : pct<0.20 ? 'bien' : 'ideal';
+  return {I, B, De, V, A12, disponible, sobraHoy, futuro, dar, gustos, pct, nivel};
+}
+function destino(){
+  const a = d.a, g = basicos();
+  if(a==null || a < g) return {k:'fondo', txt:'tu fondo de emergencia, hasta tener 1 mes de gastos guardado', p:2};
+  if(d.tp==='minimo' || d.tp==='menos' || d.pr) return {k:'deudas', txt:'pagar más rápido tus deudas caras', p:3};
+  if(a < 3*g) return {k:'fondo', txt:'completar tu fondo de emergencia hasta 3 meses de gastos', p:2};
+  return {k:'metas', txt:'tus metas, como el retiro', p:5};
+}
+
+function pantalla(){
+  $app.innerHTML = `
+    <p class="ceja">Laboratorio 3 · Peldaño 1 de la escalera</p>
+    <h1>Mi mes</h1>
+    <p>El primer peldaño es que el mes alcance. Poné lo que entra y lo que sale, y mirá cuánto queda para repartir entre tu futuro y tus gustos.</p>
+    ${U.banner(origen, origen==='lab' ? 'La Escalera no preguntó por gustos ni por gastos del año: si los agregás, el resultado se acerca más a tu mes real.' : '')}
+    <section class="calc" aria-label="Tus números del mes">
+      ${U.campo('m-i','Lo que recibís al mes','Ya con descuentos, en efectivo o transferencia', s.i)}
+      <div class="extras">
+        <div class="campo"><span>Tus gastos básicos</span>${U.chips('modo', [['cat','Por categoría'],['total','Solo el total']], s.modo, 'Cómo escribir tus gastos')}</div>
+        <div id="m-cats" class="${s.modo==='cat'?'':'oculto'}" style="display:grid;gap:8px">${CATS.map(c => U.campo('m-'+c[0], c[1], c[2], s[c[0]])).join('')}</div>
+        <div id="m-total" class="${s.modo==='total'?'':'oculto'}">${U.campo('m-g','Total de gastos básicos','Vivienda, comida, transporte, servicios, estudios', s.g)}</div>
+      </div>
+      <div class="extras">
+        ${U.campo('m-deudas','Pagos de deudas al mes','Tarjetas y préstamos, lo que pagás normalmente', s.deudas)}
+        ${U.campo('m-var','Salidas, antojos y compras no planeadas','Un cálculo aproximado está bien', s.variables)}
+        ${U.campo('m-anual','Gastos que vienen una vez al año','Inscripción, útiles, regalos de diciembre, seguro del carro: el total del año', s.anual)}
+      </div>
+    </section>
+    <div id="resultado" aria-live="polite"></div>
+    ${U.notaLab()}
+    ${U.pie()}`;
+  const ids = ['m-i','m-g','m-deudas','m-var','m-anual'].concat(CATS.map(c => 'm-'+c[0]));
+  ids.forEach(id => document.getElementById(id).addEventListener('input', () => {
+    s.i = U.leerNum('m-i'); s.g = U.leerNum('m-g'); s.deudas = U.leerNum('m-deudas'); s.variables = U.leerNum('m-var'); s.anual = U.leerNum('m-anual');
+    CATS.forEach(c => s[c[0]] = U.leerNum('m-'+c[0])); s.futuro = null; tocado(); dibujar(); }));
+  U.enlazarChips($app, 'modo', v => {
+    if(v==='total' && s.modo==='cat'){ s.g = basicos(); document.getElementById('m-g').value = s.g || ''; }
+    s.modo = v; document.getElementById('m-cats').classList.toggle('oculto', v!=='cat'); document.getElementById('m-total').classList.toggle('oculto', v!=='total'); dibujar(); });
+  dibujar();
+}
+function tocado(){ if(origen==='ejemplo'){ origen='propio'; const o = $app.querySelector('.origen'); if(o) o.remove(); } }
+
+function barraHTML(c){
+  const total = Math.max(c.I, c.B + c.De + c.A12 + c.V);
+  const w = v => (100*Math.max(0,v)/total).toFixed(2) + '%';
+  const partes = [['c-basico','Gastos básicos', c.B],['c-deuda','Pagos de deudas', c.De],['c-var','Gastos del año (apartado al mes)', c.A12],['c-var','Salidas, antojos y compras', c.V]];
+  if(c.sobraHoy>=0) partes.push(['c-sobra','Te queda', c.sobraHoy]); else partes.push(['c-falta','Te falta', -c.sobraHoy]);
+  return `<div class="apilada" role="img" aria-label="Cómo se reparte lo que recibís">${partes.filter(p=>p[2]>0).map(p => `<i class="${p[0]}" style="width:${w(p[2])}"></i>`).join('')}</div>
+    <ul class="leyenda">${partes.filter(p=>p[2]>0).map(p => `<li><span class="cu ${p[0]}"></span>${p[1]}<span class="v">${Q(p[2])} · ${c.I ? Math.round(100*p[2]/c.I) : 0}%</span></li>`).join('')}</ul>
+    <p class="suave chico" style="margin-top:6px">Porcentajes sobre lo que recibís al mes.</p>`;
+}
+
+function dibujar(){
+  const box = document.getElementById('resultado');
+  if(!(s.i>0)){ box.innerHTML = '<p class="suave" style="margin-top:16px">Escribí lo que recibís al mes para ver tu resultado.</p>'; return; }
+  const c = calc(), de = destino();
+  if(origen!=='ejemplo') U.actualizar({i:c.I, g:c.B, s: c.sobraHoy>0 ? c.sobraHoy : null, ...(s.modo==='cat' ? Object.fromEntries(CATS.map(k => [k[0], s[k[0]]||0])) : {})});
+  const NOM = M.NIVEL_NOMBRE;
+  let breve, paso;
+  if(c.sobraHoy<0){
+    breve = `Este mes salen <b>${Q(-c.sobraHoy)} más</b> de lo que entra.`;
+    paso = `Encontrar ${Q(-c.sobraHoy)} al mes entre gastos, pagos de deudas o un ingreso extra, para que el mes alcance.`;
+  } else {
+    breve = `Te quedan <b>${Q(c.sobraHoy)}</b> al mes: ${Math.round(c.pct*100)}% de lo que recibís.`;
+    paso = c.futuro>0 ? `Apartar ${Q(c.futuro)} el día que te pagan para ${de.txt}.` : `Elegir una cantidad para tu sobre de futuro, aunque sea pequeña, y apartarla el día que te pagan.`;
+  }
+  box.innerHTML = `
+    <section class="breve">
+      <p class="etq" style="margin-top:0">Tu mes <span class="nv nv-${c.nivel}">${NOM[c.nivel]}</span></p>
+      <p class="lugar">${breve}</p>
+      ${barraHTML(c)}
+      ${c.disponible>0 ? sobresHTML(c, de) : ''}
+      <div class="siguiente"><p class="etq" style="margin-top:0">Tu siguiente paso</p><p class="sig-texto">${U.glosar(paso)}</p></div>
+    </section>
+    ${c.sobraHoy<0 ? ajusteHTML(c) : U.puente(de.k, `Siguiente: ${U.HERRAMIENTAS.find(h=>h.k===de.k).nombre}`, `Con tu sobre de futuro de ${Q(c.futuro)} al mes. ${U.HERRAMIENTAS.find(h=>h.k===de.k).que}`)}
+    ${c.disponible>0 && c.futuro>0 ? U.cumplir('Lo difícil no es calcular, es cumplir cuando aparece la tentación. Estas tres cosas hacen que la decisión de hoy trabaje sola después.', [
+      {t:'Que el sobre de futuro se aparte solo', html:`<p class="chico">${U.glosar(`Pedile a tu banco o cooperativa una transferencia automática de ${Q(c.futuro)} el día de pago, a una cuenta aparte. Lo que no ves en tu cuenta del salario, no lo gastás sin darte cuenta.`)}</p>`},
+      {t:'Un permiso para gustos, sin culpa', html:`<p class="chico">Tu sobre de gustos es de ${Q(c.gustos)} al mes. Gastarlo está bien: es parte del plan. Para lo que no estaba planeado, ayuda la <b>regla de las 48 horas</b>: esperar dos días antes de comprar. Muchas veces las ganas se pasan.</p>`},
+      {t:'Una revisión al mes', html:`<p class="chico">Un recordatorio el día de pago con tus sobres. Cinco minutos para ver si el mes salió como lo pensaste.</p>${U.icsHTML('mes', dia)}`}]) : ''}
+    <h2>Para saber más</h2>
+    ${U.bloque('m1','1','Por qué ayudan los sobres','Separar el dinero por destino hace más fácil respetarlo.', sobresPorque())}
+    ${U.bloque('m2','2','Los gastos que vienen cada año','No son emergencias: se pueden prever.', anualHTML(c))}
+    ${c.sobraHoy>=0 ? U.bloque('m3','3','Si un mes no alcanza','Ideas para ajustar sin culpa.', ideasHTML(c)) : ''}`;
+  const sl = document.getElementById('m-futuro');
+  if(sl) sl.addEventListener('input', () => { s.futuro = +sl.value; const k = calc();
+    document.getElementById('v-futuro').textContent = Q(k.futuro); document.getElementById('v-gustos').textContent = Q(k.gustos);
+    document.getElementById('v-futuro-pct').textContent = Math.round(100*k.futuro/k.I) + '% de lo que recibís';
+    const sig = $app.querySelector('.sig-texto'); if(sig) sig.innerHTML = U.glosar(k.futuro>0 ? `Apartar ${Q(k.futuro)} el día que te pagan para ${de.txt}.` : 'Elegir una cantidad para tu sobre de futuro, aunque sea pequeña, y apartarla el día que te pagan.');
+    if(origen!=='ejemplo') U.actualizar({s: k.futuro || null}); });
+  if(sl) sl.addEventListener('change', () => dibujar());
+  const da = document.getElementById('dar-abrir'); if(da) da.onclick = () => { s.darOn = true; dibujar(); const i = document.getElementById('m-dar'); if(i) i.focus(); };
+  const dc = document.getElementById('dar-cerrar'); if(dc) dc.onclick = () => { s.darOn = false; s.dar = null; dibujar(); };
+  const di = document.getElementById('m-dar');
+  if(di){ di.addEventListener('input', () => { s.dar = U.leerNum(di); const k = calc(); document.getElementById('v-dar').textContent = Q(k.dar); document.getElementById('v-gustos').textContent = Q(k.gustos); }); }
+  U.enlazarChips($app, 'dia-mes', v => dia = v);
+  const b = document.getElementById('ics-mes');
+  if(b) b.onclick = () => U.descargarICS({dias:dia, uid:'mes', titulo:'Revisar mi mes y apartar mi sobre de futuro',
+      descripcion:`Fijos: ${Q(c.B + c.De)}. Futuro: ${Q(c.futuro)} (para ${de.txt}). Gustos sin culpa: ${Q(c.gustos)}.${c.dar ? ` Para dar: ${Q(c.dar)}.` : ''} Gastos del año: ${Q(c.A12)} al mes.`,
+      alarma:`Apartar ${Q(c.futuro)} para tu futuro`}, 'recordatorio-mi-mes.ics', document.getElementById('ics-mes-estado'));
+}
+
+function sobresHTML(c, de){
+  return `<p class="etq">Tres sobres para lo que queda</p>
+    <p class="chico" style="margin-bottom:6px">Después de lo fijo te quedan ${Q(c.disponible)} para repartir. Mové la barra para decidir cuánto va a tu futuro; el resto es tu permiso para gustos.</p>
+    <input type="range" id="m-futuro" min="0" max="${Math.max(0, Math.floor(c.disponible/50)*50)}" step="50" value="${c.futuro}" aria-label="Cuánto va a tu sobre de futuro" style="width:100%;accent-color:var(--azul)">
+    <div class="sobres">
+      <div class="sobre"><span>Fijos</span><b>${Q(c.B + c.De + c.A12)}</b><small>Básicos, deudas y gastos del año</small></div>
+      <div class="sobre futuro"><span>Futuro</span><b id="v-futuro">${Q(c.futuro)}</b><small id="v-futuro-pct">${Math.round(100*c.futuro/c.I)}% de lo que recibís</small></div>
+      <div class="sobre"><span>Gustos sin culpa</span><b id="v-gustos">${Q(c.gustos)}</b><small>${c.V ? `Hoy gastás unos ${Q(c.V)}` : 'Salidas, antojos, compras'}</small></div>
+      ${s.darOn ? `<div class="sobre"><span>Para dar</span><b id="v-dar">${Q(c.dar)}</b><small>Opcional</small></div>` : ''}
+    </div>
+    <p class="porque">${U.glosar(`Según tus números, tu sobre de futuro conviene que vaya primero a ${de.txt} (peldaño ${de.p}).`)}</p>
+    ${darHTML(c)}`;
+}
+// Sobre opcional para dar: solo aparece si la persona lo abre, y solo cuando el mes alcanza
+function darHTML(c){
+  if(c.sobraHoy<0){ s.darOn = false; return ''; }
+  if(!s.darOn) return `<p style="margin:12px 0 0"><button type="button" class="enlace" id="dar-abrir">¿Querés apartar algo para ayudar a otros?</button></p>`;
+  return `<div class="dar">
+    <p class="etq" style="margin-top:0">Un sobre para dar <span class="suave" style="text-transform:none;letter-spacing:0;font-weight:400">· opcional</span></p>
+    <label class="campo"><span>Lo que querés apartar al mes <small>Lo que vos decidás. Sale de tu sobre de gustos</small></span>
+      <span class="monto chico-monto"><span>Q</span><input id="m-dar" inputmode="decimal" autocomplete="off" value="${s.dar??''}" placeholder="0"></span></label>
+    <p class="chico">Dar no tiene que esperar a que sobre mucho: lo que más pesa es la costumbre, y cada quien decide cuándo, cuánto y a quién. Tampoco tiene que ser dinero: tu tiempo, enseñar lo que sabés o acompañar a alguien también es dar.</p>
+    ${U.dato(`En un experimento, personas que recibieron US$${D.dar_experimento.v.montos[0]} o US$${D.dar_experimento.v.montos[1]} y los gastaron en otros terminaron el día más felices que quienes los gastaron en sí mismas. En ${D.dar_paises.v.positivos} de ${D.dar_paises.v.paises} países, gastar en otros se asocia con más bienestar, también en los de ingresos bajos.`, D.dar_experimento, D.dar_paises)}
+    <p class="chico">Arthur C. Brooks, que estudia la felicidad, resume la investigación así: quienes dan dinero o tiempo dicen estar más satisfechos con su vida y con menos estrés. <span class="suave">(${U.fuente(D.dar_brooks)})</span></p>
+    <p class="chico"><b>Dar con cuidado:</b> a personas u organizaciones que conocés. Si alguien te escribe pidiendo ayuda urgente, aunque diga ser un familiar, confirmalo por otro medio antes de mandar dinero.</p>
+    <p class="chico" style="margin:0"><button type="button" class="enlace" id="dar-cerrar">Quitar este sobre</button> <span class="suave">· no cambia nada de tu plan</span></p></div>`;
+}
+function ajusteHTML(c){
+  const cats = s.modo==='cat' ? CATS.map(k => [k[1], s[k[0]]||0]).sort((a,b)=>b[1]-a[1]) : [];
+  const falta = -c.sobraHoy;
+  const filas = [];
+  if(c.V>0) filas.push(`<li><b>Salidas y compras no planeadas (${Q(c.V)}).</b> Es lo más fácil de mover sin afectar lo básico. Bajarlo a la mitad libera ${Q(c.V/2)}.</li>`);
+  if(c.De>0) filas.push(`<li><b>Pagos de deudas (${Q(c.De)}).</b> Si son muy altos, a veces se puede reordenar o negociar un convenio de pago. El Plan de deudas te muestra opciones.</li>`);
+  if(cats.length && cats[0][1]>0) filas.push(`<li><b>${U.esc(cats[0][0])} (${Q(cats[0][1])})</b> es tu gasto básico más grande. Un 10% menos son ${Q(cats[0][1]*0.1)} al mes.</li>`);
+  if(c.A12>0) filas.push(`<li><b>Gastos del año (${Q(c.A12)} al mes).</b> Revisar si alguno se puede posponer o hacer más barato este año.</li>`);
+  filas.push(`<li><b>Un ingreso extra</b>, aunque sea temporal, también cierra la diferencia. Ojo con ofertas de "ganar fácil": casi siempre cuestan dinero.</li>`);
+  return `<section class="cumplir"><h2 style="margin-top:0;border:0;padding:0">Dónde se pueden encontrar ${Q(falta)}</h2>
+    <p class="chico">No hace falta resolverlo todo de una vez. Sumando un poco de varias partes suele ser más fácil.</p>
+    <ul class="chico">${filas.join('')}</ul>
+    ${c.De>0 ? U.puente('deudas','Ver mi Plan de deudas','Cuánto tardás y cuánto pagás de intereses, y en qué orden conviene pagar.') : ''}
+    ${U.dato(`De cada 100 hogares en Guatemala, ${Math.round(D.enifh.v.noAlcanza)} dicen que su ingreso no les alcanza para cubrir sus gastos. No estás solo en esto.`, D.enifh)}</section>`;
+}
+function sobresPorque(){
+  return `<p>${U.glosar('Cuando todo el dinero está junto, cada gasto parece pequeño y el mes se acaba sin saber dónde se fue. Separar en sobres (cuentas distintas, o sobres de efectivo si te pagan en efectivo) hace visible cuánto queda de cada cosa.')}</p>
+    <p>Los economistas lo llaman <b>contabilidad mental</b>: tratamos distinto el dinero según la "etiqueta" que le ponemos. Usarlo a favor es fácil: ponerle nombre al dinero del futuro antes de que llegue la tentación.</p>
+    <ul class="chico"><li><b>Si te pagan en efectivo:</b> separar el dinero en sobres apenas lo recibís, uno por destino.</li>
+      <li><b>Si te pagan a cuenta:</b> una cuenta aparte para el futuro, sin tarjeta de débito, hace más difícil tocarla.</li>
+      <li><b>El sobre de gustos es importante:</b> los planes demasiado estrictos se rompen al primer antojo.</li></ul>`;
+}
+function anualHTML(c){
+  return `<p>La inscripción del colegio en enero, los útiles, los regalos de diciembre, el marchamo o el seguro del carro: llegan todos los años. Si no se apartan, se pagan con tarjeta o con el fondo de emergencia.</p>
+    ${c.A12>0 ? `<p>Con lo que escribiste, apartar <b>${Q(c.A12)} al mes</b> en un sobre aparte cubre esos gastos cuando lleguen.</p>` : '<p>Escribí arriba el total de esos gastos en un año y te decimos cuánto apartar al mes.</p>'}
+    <p class="chico">${U.glosar(`El aguinaldo (diciembre) y el Bono 14 (julio) pueden ayudar con estos gastos. Por ley, cada uno equivale a un salario mensual completo para quien trabaja en relación de dependencia.`)} <span class="suave">(${U.fuente(D.bono14)}; ${U.fuente(D.aguinaldo)})</span></p>`;
+}
+function ideasHTML(c){
+  return `<ul class="chico"><li>Usar primero el sobre de gustos, no el fondo de emergencia.</li>
+    <li>Si un gasto inesperado se repite cada año, pasarlo a "gastos del año".</li>
+    <li>Evitar cubrir la diferencia con la tarjeta: a la tasa promedio de ${M.fmtPct(D.tc_tasa_prom_mn.v)} al año, lo que hoy son Q1,000 se vuelven bastante más si pagás solo el mínimo.</li></ul>
+    ${U.dato(`De cada 100 hogares en Guatemala, ${Math.round(D.enifh.v.noAlcanza)} dicen que su ingreso no les alcanza para cubrir sus gastos.`, D.enifh)}`;
+}
+
+pantalla();
+U.quitarHash();
+})();
+
+</script>
+</body>
+</html>

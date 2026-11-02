@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="color-scheme" content="light">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Desarrollo inmobiliario · Pro · Lab 3 · UMBRAL</title>
+<meta name="description" content="El flujo de un desarrollo inmobiliario mes a mes: TIR, VAN, exposición máxima, pruebas de estrés y alertas. Para aprender o para usar a fondo.">
+<meta property="og:title" content="Desarrollo inmobiliario · Pro · UMBRAL Lab 3">
+<meta property="og:description" content="El flujo de un desarrollo inmobiliario mes a mes: TIR, VAN, exposición máxima, pruebas de estrés y alertas. Para aprender o para usar a fondo.">
+<meta property="og:type" content="website"><meta property="og:url" content="https://lab3.umbralgt.com/pro/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Sistema visual UMBRAL (Lab 1 y Lab 2). Color: blanco y negro de base; azul #2f5bd3 como único acento;
+   verde, ámbar y rojo solo para el semáforo y los errores, siempre en tinte suave (igual que .traffic-* de Lab 1);
+   otros colores (morado, naranja, verde de mapa) solo para distinguir categorías de datos, como las capas de Lab 1. */
+:root{
+  --negro:#0a0a0a; --blanco:#ffffff; --suelo:#f4f4f2; --g200:#efefef; --g300:#e3e3e3; --g400:#cfcfcf; --g600:#6b6b6b;
+  --azul:#2f5bd3; --azul-claro:#eef2fc;
+  --verde:#1f7a3b; --verde-claro:#e7f6ec; --ambar:#c79200; --ambar-claro:#fff7da; --rojo:#c0392b; --rojo-claro:#ffe3e3;
+  --linea:1.5px solid var(--negro); --suave:1px solid var(--g300);
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:calc(54px + env(safe-area-inset-top,0px))}
+body{margin:0;background:var(--blanco);color:var(--negro);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  font-size:17px;line-height:1.55;-webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%}
+button{font:inherit;color:inherit;cursor:pointer}
+a{color:var(--negro)}
+:focus-visible{outline:2px solid var(--azul);outline-offset:2px}
+
+/* Barra de navegación, igual a Lab 1 y Lab 2 */
+#nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;height:54px;display:flex;align-items:center;gap:12px;padding:0 20px;background:var(--blanco);border-bottom:var(--linea)}
+#nav .logo{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--negro);text-decoration:none;white-space:nowrap}
+#nav .mods{display:flex;gap:4px;flex:1;justify-content:center}
+#nav .mod{padding:6px 12px;font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--g600);border-radius:6px;text-decoration:none}
+#nav .mod.activo{color:var(--negro);background:var(--g200)}
+#nav .volver{margin-left:auto;display:inline-flex;gap:8px;padding:8px 14px;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:500;border-radius:8px;text-decoration:none;white-space:nowrap}
+#nav .logo{min-width:0;overflow:hidden;text-overflow:ellipsis}
+#nav .volver{flex:none}
+@media (max-width:560px){#nav .mods{display:none}#nav{padding:0 14px;gap:8px}#nav .volver{padding:8px 12px}}
+
+main{max-width:680px;margin:0 auto;padding:28px 20px 48px}
+.ceja{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin:0 0 10px}
+h1{font-size:2.1rem;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:0 0 14px}
+h2{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.07em;margin:36px 0 12px;padding-bottom:6px;border-bottom:1px solid var(--g300)}
+h3{font-size:1rem;font-weight:700;margin:0 0 6px}
+p{margin:0 0 14px}
+.suave{color:var(--g600)}
+.chico{font-size:.88rem;line-height:1.5}
+.nota-lab{border:var(--linea);border-radius:8px;padding:14px 16px;margin:20px 0}
+.nota-lab b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:6px}
+.aviso{background:var(--ambar-claro);border:1.5px solid var(--ambar);border-radius:8px;padding:10px 14px;font-size:.85rem;color:var(--ambar);margin:0 0 20px}
+.aviso strong{font-weight:700}
+.btn{display:block;width:100%;padding:13px;border:var(--linea);border-radius:8px;background:var(--negro);color:var(--blanco);font-size:15px;font-weight:700;text-align:center}
+.btn:hover{opacity:.88}
+.btn.sec{background:var(--blanco);color:var(--negro)}
+.btn.sec:hover{background:var(--g200);opacity:1}
+.enlace{background:none;border:0;padding:4px 0;color:var(--negro);text-decoration:underline;text-underline-offset:3px;font-size:.95rem}
+.fila{display:flex;gap:10px;margin-top:20px}
+.fila .btn{flex:1}
+
+/* Pregunta */
+.avance{height:4px;background:var(--g300);border-radius:2px;overflow:hidden;margin-bottom:10px}
+.avance i{display:block;height:100%;background:var(--negro);transition:width .3s}
+.bloque{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:24px}
+.pregunta{font-size:1.55rem;line-height:1.25;letter-spacing:-.02em;font-weight:700;margin:0 0 8px}
+.opciones{display:grid;gap:8px;margin-top:20px}
+.op{display:flex;align-items:center;gap:12px;text-align:left;padding:14px 16px;border-radius:8px;border:1.5px solid var(--g400);background:var(--blanco);font-size:1rem;font-weight:500}
+.op:hover{border-color:var(--negro)}
+.op[aria-pressed="true"]{border-color:var(--negro);background:var(--negro);color:var(--blanco)}
+.op .caja{flex:none;width:18px;height:18px;border-radius:50%;border:1.5px solid currentColor}
+.op.multi .caja{border-radius:4px}
+.op[aria-pressed="true"] .caja{background:var(--blanco);box-shadow:inset 0 0 0 3px var(--negro)}
+.monto{display:flex;align-items:center;border:1px solid var(--g400);border-radius:8px;background:var(--suelo);margin-top:20px}
+.monto:focus-within{border-color:var(--negro);background:var(--blanco);box-shadow:0 0 0 1px var(--negro)}
+.monto span{padding:0 2px 0 16px;font-size:1.5rem;font-weight:700;color:var(--g600)}
+.monto input{flex:1;min-width:0;border:0;background:transparent;font:inherit;font-size:1.5rem;font-weight:700;padding:12px 16px 12px 4px;color:var(--negro)}
+.monto input:focus{outline:none}
+.unidad{display:flex;gap:8px;margin-top:10px}
+.unidad .op{flex:1;justify-content:center;padding:10px}
+.nose{margin-top:10px}
+.ayuda{margin-top:16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.help-icon{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--negro);background:var(--blanco);font-size:12px;font-weight:700;color:var(--negro);padding:0;line-height:1}
+.help-icon:hover,.help-icon[aria-expanded="true"]{background:var(--negro);color:var(--blanco)}
+.help-lbl{font-size:.9rem;color:var(--g600)}
+.help-bubble{flex-basis:100%;background:var(--blanco);border:1.5px solid var(--negro);border-radius:10px;padding:12px 14px;font-size:.92rem;line-height:1.65;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.error{color:var(--rojo);font-size:.95rem;margin-top:8px;min-height:1.4rem}
+
+/* Escalera */
+.lugar{font-size:2rem;line-height:1.1;letter-spacing:-.03em;font-weight:700;margin:4px 0 8px}
+.escalera{list-style:none;margin:16px 0 0;padding:0;display:flex;flex-direction:column-reverse}
+.peldano{display:flex;align-items:center;gap:14px;padding:7px 0}
+.peldano .travesano{flex:none;width:72px;height:12px;border:1.5px solid var(--g400);border-radius:2px;position:relative}
+.peldano .travesano::before,.peldano .travesano::after{content:"";position:absolute;top:-10px;bottom:-10px;width:1.5px;background:var(--g400)}
+.peldano .travesano::before{left:-1.5px}.peldano .travesano::after{right:-1.5px}
+.peldano.hecho .travesano{background:var(--negro);border-color:var(--negro)}
+.peldano.aqui .travesano{background:var(--azul);border-color:var(--azul);height:16px}
+.peldano .nombre{font-size:.95rem;color:var(--g600)}
+.peldano.hecho .nombre{color:var(--negro)}
+.peldano.aqui .nombre{color:var(--azul);font-weight:700}
+.peldano.lejos{opacity:.55}
+
+/* Tropiezo */
+.tropiezo{border:var(--linea);border-radius:10px;padding:16px;margin-top:12px}
+/* Semáforo como el traffic-box de Lab 1: tinte suave, borde del mismo tono, sin mayúsculas */
+.semaforo{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700;padding:3px 10px;border-radius:6px;border:1.5px solid}
+.semaforo::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.semaforo.verde{color:var(--verde);background:var(--verde-claro)}
+.semaforo.amarillo{color:var(--ambar);background:var(--ambar-claro)}
+.semaforo.rojo{color:var(--rojo);background:var(--rojo-claro)}
+.cifra{font-size:1.8rem;font-weight:700;letter-spacing:-.03em;line-height:1.15;margin:10px 0 6px}
+.pestanas{display:flex;gap:0;border:var(--linea);border-radius:8px;overflow:hidden;width:fit-content;margin:4px 0 14px}
+.pestanas .op{border:0;border-radius:0;padding:8px 14px;font-size:12px;font-weight:700}
+.pestanas .op .caja{display:none}
+.compara{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}
+.compara div{background:var(--suelo);border:var(--suave);border-radius:8px;padding:10px 12px;font-size:.9rem}
+.compara b{display:block;font-size:1.2rem;letter-spacing:-.02em}
+.calma{background:var(--suelo);border:var(--linea);border-radius:10px;padding:16px;margin-top:20px}
+
+/* Hallazgos */
+.hallazgo{border:var(--suave);border-radius:10px;padding:16px;margin-top:10px}
+.familia{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin-bottom:6px}
+.hallazgo .vimos{font-weight:700;font-size:1.08rem;letter-spacing:-.01em;margin-bottom:8px}
+.de100{border-left:3px solid var(--azul);background:var(--azul-claro);padding:8px 12px;border-radius:0 8px 8px 0;margin:12px 0}
+.paso{margin-top:10px}
+.nota{font-size:.85rem;color:var(--g600);margin-top:8px}
+.pie{font-size:.8rem;color:var(--g600);border-top:var(--suave);margin-top:12px;padding-top:8px}
+.marca-verif{display:inline-block;font-size:12px;font-weight:700;border:1.5px solid var(--ambar);color:var(--ambar);background:var(--ambar-claro);padding:2px 8px;border-radius:6px;margin-top:8px}
+
+/* Cómo funciona */
+.tabla{overflow-x:auto;margin:12px 0;border:var(--suave);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.82rem;min-width:30rem}
+th,td{text-align:left;padding:7px 9px;border-bottom:var(--suave);vertical-align:top}
+th{font-size:10px;letter-spacing:.07em;text-transform:uppercase;color:var(--g600)}
+
+footer{background:#0a0a0a;padding:28px 20px;margin-top:48px}
+.pie-in{max-width:680px;margin:0 auto}
+footer .lema{font-size:20px;font-weight:700;color:#fff;letter-spacing:-.02em;margin:0 0 6px}
+footer .per{font-size:12px;color:#777;font-style:italic;margin:0 0 20px}
+.pie-fila{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;padding-top:16px;border-top:1px solid #1e1e1e}
+.pie-fila span{font-size:11px;color:#777;font-weight:500}
+.pie-fila a{display:inline-flex;gap:8px;padding:7px 14px;background:#fff;color:#0a0a0a;font-size:11px;font-weight:500;border-radius:8px;text-decoration:none}
+
+/* v1.1: ajustes de la primera prueba con usuario */
+.porque{background:var(--suelo);border-left:3px solid var(--azul);padding:8px 12px;border-radius:0 8px 8px 0;font-size:.92rem;margin:10px 0 0}
+.term{display:inline;background:none;border:0;padding:0;font:inherit;color:inherit;text-decoration:underline dotted;text-decoration-thickness:1.5px;text-underline-offset:3px;cursor:help}
+.def{display:block;background:var(--blanco);color:var(--negro);border:1.5px solid var(--negro);border-radius:10px;padding:10px 12px;margin:8px 0;font-size:.92rem;font-weight:400;line-height:1.55;letter-spacing:0;box-shadow:0 4px 20px rgba(0,0,0,.12)}
+.def b{font-weight:700}
+.term[aria-expanded="true"]{background:var(--azul-claro)}
+.explica{border:1.5px solid var(--negro);border-radius:10px;padding:12px 14px;margin-top:12px}
+.explica b{display:block;font-size:11px;letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px}
+.explica p{margin:0}
+.desglose{display:grid;gap:8px;margin-top:20px}
+.fila-gasto{display:flex;align-items:center;gap:12px;justify-content:space-between}
+.fila-gasto .lbl{flex:1;font-weight:600;font-size:.98rem;line-height:1.3}
+.fila-gasto small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.chico-monto{margin-top:0;width:9rem;flex:none}
+.chico-monto span{font-size:1rem;padding-left:12px}
+.chico-monto input{font-size:1.05rem;padding:9px 10px 9px 2px}
+.total-gasto{display:flex;justify-content:space-between;border-top:var(--linea);padding-top:10px;margin-top:4px;font-weight:700}
+.resumen{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.dato{border:var(--suave);border-radius:10px;padding:12px}
+.dato span{display:block;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600)}
+.dato b{display:block;font-size:1.35rem;letter-spacing:-.02em}
+.dato small{display:block;font-size:.78rem;color:var(--g600);line-height:1.35}
+.pasos-esc{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:8px}
+.paso-esc{display:flex;gap:12px;padding:12px;border:var(--suave);border-radius:10px}
+.paso-esc .marca{flex:none;width:22px;height:22px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;border:1.5px solid var(--g400);color:var(--g600)}
+.paso-esc.cumple .marca{background:var(--negro);color:var(--blanco);border-color:var(--negro)}
+.paso-esc.aqui{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.paso-esc.aqui .marca{border-color:var(--azul);color:var(--azul)}
+.paso-esc.despues{opacity:.7}
+.paso-esc p{margin:4px 0 0;font-size:.93rem}
+.etq{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--g600);margin:12px 0 2px}
+.hallazgo .vimos{margin-bottom:4px}
+.siguiente{border:var(--linea);border-radius:10px;padding:16px}
+.siguiente .etq{margin-top:0}
+.sig-texto{font-size:1.25rem;font-weight:700;letter-spacing:-.02em;line-height:1.3}
+.mini-esc{margin:0 0 14px;padding:0;list-style:none;counter-reset:p;display:grid;gap:6px}
+.mini-esc li{counter-increment:p;display:flex;gap:10px;align-items:baseline;font-size:.95rem;color:var(--g600)}
+.mini-esc li::before{content:counter(p);flex:none;width:22px;height:22px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transform:translateY(4px)}
+.mini-esc b{color:var(--negro)}
+
+/* v1.2: segunda prueba con usuario */
+.breve{border:var(--linea);border-radius:10px;padding:16px;margin-top:4px}
+.breve:focus{outline:none}
+.breve .lugar{font-size:1.6rem}
+.breve .siguiente{margin-top:14px;background:var(--azul-claro);border:1.5px solid var(--azul)}
+.bloque-r{border:var(--linea);border-radius:10px;margin-top:10px}
+.bloque-r summary{list-style:none;display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer}
+.bloque-r summary::-webkit-details-marker{display:none}
+.bloque-r .num{flex:none;width:26px;height:26px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:13px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.bloque-r .tit{flex:1}
+.bloque-r .tit b{display:block;font-size:1.02rem;letter-spacing:-.01em}
+.bloque-r .tit small{display:block;color:var(--g600);font-size:.85rem;line-height:1.4}
+.bloque-r .flecha{font-size:1.4rem;transition:transform .2s}
+.bloque-r[open] .flecha{transform:rotate(90deg)}
+.bloque-c{padding:0 16px 16px}
+.nivel{border:var(--suave);border-radius:10px;padding:12px;margin-top:8px}
+.nivel-cab{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.nv{font-size:12px;font-weight:700;padding:2px 8px;border-radius:6px;border:1.5px solid}
+.nv-riesgo{color:var(--rojo);background:var(--rojo-claro)}
+.nv-minimo{color:var(--ambar);background:var(--ambar-claro)}
+.nv-bien,.nv-ideal{color:var(--verde);background:var(--verde-claro)}
+.nivel-dato{margin:6px 0 8px;font-size:.95rem}
+.barra{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}
+.seg{height:8px;border-radius:2px;background:var(--g300)}
+.seg.lleno{border:0}
+.seg.lleno.nv-riesgo{background:var(--rojo)}.seg.lleno.nv-minimo{background:var(--ambar)}.seg.lleno.nv-bien,.seg.lleno.nv-ideal{background:var(--verde)}
+.barra-et{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:4px}
+.barra-et span{font-size:10px;color:var(--g600);line-height:1.2}
+.nivel-sig{font-size:.88rem;margin:8px 0 0}
+.grupo{margin-top:14px}
+.grupo>h3{margin-bottom:2px}
+
+/* v1.3 */
+.compara.tres{grid-template-columns:1fr}
+@media (min-width:520px){.compara.tres{grid-template-columns:repeat(3,1fr)}}
+.compara span{display:block;font-size:.85rem;color:var(--g600)}
+.nivel-sig{font-size:.9rem;margin:10px 0 0;background:var(--suelo);border-radius:8px;padding:8px 10px}
+.alerta{border:var(--suave);border-radius:10px;padding:14px;margin-top:10px}
+.alerta.marcada{border:1.5px solid var(--ambar)}
+.alerta h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.alerta .etq{margin-top:8px}
+.alerta p{margin-bottom:4px}
+
+/* Mi fondo de emergencia */
+.probar{border:var(--linea);border-radius:10px;padding:14px 16px;margin-top:12px}
+.probar label{display:block;font-size:.95rem}
+.probar input[type=range]{width:100%;margin:10px 0 4px;accent-color:var(--azul)}
+.probar .chk{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:.92rem}
+.probar .chk input{width:18px;height:18px;accent-color:var(--azul)}
+.grafica{margin:4px 0 12px;position:relative}
+.grafica svg{width:100%;height:auto;display:block;touch-action:pan-y}
+.g-base{stroke:var(--g400);stroke-width:1}
+.g-meta{stroke:var(--g400);stroke-width:1;stroke-dasharray:4 4}
+.g-et{font-size:10px;fill:var(--g600);font-family:inherit}
+.g-ax{font-size:9.5px;fill:var(--g600);font-family:inherit}
+.g-linea{fill:none;stroke:var(--azul);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.g-hito{fill:var(--azul);stroke:var(--blanco);stroke-width:2}
+.g-cruz{stroke:var(--negro);stroke-width:1}
+.g-tip{position:absolute;top:0;left:0;background:var(--blanco);border:1.5px solid var(--negro);border-radius:8px;padding:4px 8px;font-size:.82rem;pointer-events:none}
+.hitos{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.hitos li{border:var(--suave);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.hitos li.hecho{border-color:var(--verde);background:var(--verde-claro)}
+.hitos span{font-size:1.05rem;font-weight:700;letter-spacing:-.01em}
+.hitos small{color:var(--g600);font-size:.82rem}
+.lugar-g{border:var(--suave);border-radius:10px;padding:12px 14px;margin-top:10px}
+.lugar-g.actual{border:1.5px solid var(--ambar)}
+.lugar-g h3{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.lugar-g dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:8px 0;font-size:.9rem}
+.lugar-g dt{color:var(--g600)}
+.lugar-g dd{margin:0}
+.progreso{background:var(--verde-claro);border:1.5px solid var(--verde);border-radius:10px;padding:12px;margin-bottom:12px}
+.breve .lugar .nv{font-size:14px}
+
+/* v0.2: calculadora en una sola pantalla */
+.origen{border-left:3px solid var(--azul);background:var(--azul-claro);padding:10px 12px;border-radius:0 8px 8px 0;font-size:.92rem;margin:12px 0}
+.origen.ejemplo{border-left-color:var(--ambar);background:var(--ambar-claro)}
+.calc{border:var(--linea);border-radius:10px;padding:14px 16px;display:grid;gap:10px;margin-top:12px}
+.campo{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.campo>span:first-child{font-weight:600;font-size:.97rem;line-height:1.3}
+.campo small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.calc input[type=range]{width:100%;accent-color:var(--azul);margin:0}
+.extras{border-top:var(--suave);padding-top:10px;display:grid;gap:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.chip-b{border:1.5px solid var(--g400);background:var(--blanco);border-radius:8px;padding:6px 12px;font-size:.88rem;font-weight:600}
+.chip-b[aria-pressed="true"]{background:var(--negro);border-color:var(--negro);color:var(--blanco)}
+#c-extra-det{display:grid;gap:8px}
+.breve .lugar{font-size:1.2rem;line-height:1.35;letter-spacing:-.01em;font-weight:500}
+.breve .lugar b{font-weight:700}
+
+.cumplir{border:var(--linea);border-radius:10px;padding:16px;margin-top:16px}
+.accion{border-top:var(--suave);padding-top:12px;margin-top:12px}
+.accion h3{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.accion .num{flex:none;width:22px;height:22px;border-radius:50%;background:var(--azul);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.accion p{margin-bottom:6px}
+.oculto{display:none!important}
+
+/* ===== Lab 3 · base común de herramientas (v1.0) ===== */
+/* Barrita de la escalera: los 6 peldaños, el actual en negro, el tuyo marcado en azul */
+#barrita{border-bottom:var(--suave);background:var(--blanco)}
+.barrita{max-width:680px;margin:0 auto;padding:10px 20px 8px}
+.barrita-cab{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600);margin-bottom:6px}
+.barrita-cab a{color:var(--g600);text-decoration:underline;text-underline-offset:2px;text-transform:none;letter-spacing:0;font-weight:600;font-size:12px}
+.barrita ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.barrita li a{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;padding:4px 0 2px;border-radius:8px}
+.barrita li a:hover{background:var(--g200)}
+.barrita .bn{width:26px;height:26px;border-radius:50%;border:1.5px solid var(--g400);color:var(--g600);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;background:var(--blanco)}
+.barrita .bl{font-size:10.5px;line-height:1.15;color:var(--g600);text-align:center}
+.barrita li.actual .bn{background:var(--negro);border-color:var(--negro);color:var(--blanco)}
+.barrita li.actual .bl{color:var(--negro);font-weight:700}
+.barrita li.tuyo .bn{box-shadow:0 0 0 2px var(--blanco),0 0 0 4px var(--azul)}
+.barrita li.hecho .bn{border-color:var(--negro);color:var(--negro)}
+.barrita-nota{font-size:11.5px;color:var(--g600);margin:6px 0 0;line-height:1.35}
+.barrita-nota b{color:var(--azul)}
+
+/* Filas editables (deudas, metas) */
+.filas{display:grid;gap:10px}
+.fila-e{border:var(--suave);border-radius:10px;padding:10px 12px;display:grid;gap:8px}
+.fila-e-cab{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.fila-e-cab input{flex:1;min-width:0;border:0;border-bottom:1px dashed var(--g400);font:inherit;font-weight:700;font-size:1rem;padding:2px 0;background:transparent}
+.fila-e-cab input:focus{outline:none;border-bottom-color:var(--negro)}
+.quitar{border:0;background:none;color:var(--g600);font-size:.85rem;text-decoration:underline;padding:2px}
+.dos{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mini{display:grid;gap:3px;font-size:.8rem;color:var(--g600);font-weight:600}
+.mini .monto{margin:0}
+.mini .monto span{font-size:.95rem;padding-left:10px}
+.mini .monto input{font-size:1rem;padding:8px 8px 8px 2px;font-weight:700}
+.mini .monto em{font-style:normal;font-size:.8rem;color:var(--g600);padding-right:10px;white-space:nowrap}
+.agregar{border:1.5px dashed var(--g400);background:var(--blanco);border-radius:10px;padding:10px;font-weight:600;font-size:.92rem;width:100%}
+.agregar:hover{border-color:var(--negro)}
+
+/* Barra apilada del ingreso */
+.apilada{display:flex;height:22px;border-radius:6px;overflow:hidden;border:1.5px solid var(--negro);margin:10px 0 8px}
+.apilada i{display:block;height:100%}
+.leyenda{list-style:none;padding:0;margin:0;display:grid;gap:4px;font-size:.9rem}
+.leyenda li{display:flex;align-items:center;gap:8px}
+.leyenda .cu{flex:none;width:12px;height:12px;border-radius:3px;border:1px solid var(--negro)}
+.leyenda .v{margin-left:auto;font-weight:700;white-space:nowrap}
+.c-basico{background:var(--negro)}.c-deuda{background:#6b6b6b}.c-var{background:#cfcfcf}.c-sobra{background:var(--azul)}.c-falta{background:repeating-linear-gradient(45deg,var(--rojo-claro),var(--rojo-claro) 4px,#f5b5b5 4px,#f5b5b5 8px)}
+.sobres{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.sobre{border:var(--linea);border-radius:10px;padding:10px;display:grid;gap:2px;align-content:start}
+.sobre span{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--g600)}
+.sobre b{font-size:1.15rem;letter-spacing:-.02em}
+.sobre small{font-size:.76rem;color:var(--g600);line-height:1.3}
+.sobre.futuro{border-color:var(--azul);background:var(--azul-claro)}
+@media (max-width:420px){.sobres{grid-template-columns:1fr}}
+
+/* Tarjetas de comparación de estrategias */
+.opciones3{display:grid;gap:8px;margin:10px 0}
+@media (min-width:560px){.opciones3{grid-template-columns:repeat(3,1fr)}}
+.op3{border:1.5px solid var(--g400);border-radius:10px;padding:12px;background:var(--blanco);text-align:left;display:grid;gap:2px;align-content:start}
+.op3[aria-pressed="true"]{border-color:var(--negro);box-shadow:inset 0 0 0 1px var(--negro)}
+.op3 .t{font-size:.82rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--g600)}
+.op3 b{font-size:1.25rem;letter-spacing:-.02em}
+.op3 small{font-size:.8rem;color:var(--g600);line-height:1.35}
+.op3.gris b{color:var(--g600)}
+.g-linea2{fill:none;stroke:var(--negro);stroke-width:2;stroke-linejoin:round}
+.g-linea3{fill:none;stroke:var(--g400);stroke-width:2;stroke-dasharray:5 4}
+.ley-g{display:flex;flex-wrap:wrap;gap:12px;font-size:.8rem;color:var(--g600);margin:2px 0 8px}
+.ley-g i{display:inline-block;width:16px;height:0;border-top:2.5px solid;vertical-align:middle;margin-right:5px}
+.orden{list-style:none;padding:0;margin:0;display:grid;gap:6px;counter-reset:o}
+.orden li{counter-increment:o;display:flex;gap:10px;align-items:baseline;border:var(--suave);border-radius:8px;padding:8px 10px;font-size:.93rem}
+.orden li::before{content:counter(o);flex:none;width:20px;height:20px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;transform:translateY(3px)}
+.orden li span{margin-left:auto;font-weight:700;white-space:nowrap}
+
+/* Meses de protección */
+.meses-p{display:grid;gap:6px;margin:10px 0}
+.mes-p{display:grid;grid-template-columns:3.2rem 1fr;gap:8px;align-items:center;font-size:.82rem}
+.mes-p .pista{height:18px;border-radius:4px;background:var(--g200);overflow:hidden;display:flex}
+.mes-p .pista i{display:block;height:100%}
+.p-ingreso{background:var(--negro)}.p-fondo{background:var(--azul)}.p-falta{background:repeating-linear-gradient(45deg,var(--rojo-claro),var(--rojo-claro) 4px,#f5b5b5 4px,#f5b5b5 8px)}
+.lista-ok{list-style:none;padding:0;margin:8px 0 0;display:grid;gap:6px}
+.lista-ok li{display:flex;gap:10px;align-items:flex-start;font-size:.93rem}
+.lista-ok input{flex:none;width:18px;height:18px;margin-top:3px;accent-color:var(--azul)}
+
+/* Metas */
+.meta-r{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-top:var(--suave);padding-top:8px;font-size:.92rem}
+.meta-r b{font-size:1.1rem;letter-spacing:-.02em;white-space:nowrap}
+.total-metas{display:flex;justify-content:space-between;align-items:baseline;gap:8px;border-top:var(--linea);padding-top:10px;margin-top:6px;font-weight:700}
+
+/* Comparador */
+.tabla td.num,.tabla th.num{text-align:right;white-space:nowrap}
+.tabla tr.destaca td{background:var(--azul-claro)}
+.sello{display:inline-block;font-size:10.5px;font-weight:700;border:1.5px solid var(--ambar);color:var(--ambar);background:var(--ambar-claro);padding:1px 6px;border-radius:5px;margin-left:4px;vertical-align:1px;white-space:nowrap}
+.revisor{border:1.5px solid var(--ambar);background:var(--ambar-claro);border-radius:10px;padding:14px 16px;margin-top:16px}
+.revisor .monto{background:var(--blanco)}
+.puente{display:flex;align-items:center;gap:12px;border:var(--linea);border-radius:10px;padding:14px 16px;margin-top:16px;text-decoration:none}
+.puente:hover{background:var(--suelo)}
+.puente .bn{flex:none;width:30px;height:30px;border-radius:50%;background:var(--negro);color:var(--blanco);font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.puente span:nth-child(2){flex:1}
+.puente small{display:block;color:var(--g600);font-size:.85rem;line-height:1.35}
+.puente .flecha{font-size:1.3rem}
+.dos>*,.fila-e>*,.calc>*{min-width:0}
+.mini .monto input{width:100%;min-width:0}
+.fila-e .chips .chip-b{padding:6px 10px}
+.campo>.chips{flex:none;flex-wrap:nowrap}
+.lugar-g.destaca{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.lugar-g .cifras{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0 4px}
+.lugar-g .cifras div{background:var(--blanco);border:var(--suave);border-radius:8px;padding:6px 8px}
+.lugar-g .cifras span{display:block;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);line-height:1.2}
+.lugar-g .cifras b{font-size:1rem;letter-spacing:-.01em}
+/* Inversión v1.1: riesgo y encaje */
+.op-inv{display:grid;gap:6px}
+.op-inv h3{margin:0}
+.op-inv.encaja{border:1.5px solid var(--azul)}
+.encaje{margin:0;font-size:.85rem;font-weight:600;color:var(--g600)}
+.op-inv.encaja .encaje{color:var(--azul)}
+.riesgo{display:flex;align-items:center;gap:4px;font-size:.82rem}
+.riesgo span{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);margin-right:4px}
+.riesgo i{width:18px;height:8px;border-radius:2px;background:var(--g300)}
+.riesgo i.r-on{background:var(--negro)}
+.riesgo b{margin-left:6px;font-weight:600}
+.op-inv dl{margin:2px 0}
+.mas summary{cursor:pointer;font-size:.88rem;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.mas[open] summary{margin-bottom:6px}
+.op-inv dl{grid-template-columns:1fr;gap:0}
+.op-inv dt{font-size:.78rem;margin-top:6px}
+
+.sel{font:inherit;font-weight:700;border:1px solid var(--g400);border-radius:8px;background:var(--suelo);padding:9px 10px;width:9rem;flex:none}
+.barrita .bl{font-size:10px}
+@media (max-width:380px){.campo{flex-wrap:wrap}.campo>.chips{flex-wrap:wrap}}
+
+/* v1.1: hoja de la escalera y página de datos */
+.hoja{list-style:none;padding:0;margin:14px 0;display:grid;gap:8px}
+.hoja li{border:var(--suave);border-radius:10px;padding:12px 14px}
+.hoja li.aqui{border:1.5px solid var(--azul);background:var(--azul-claro)}
+.hoja li.hecho{border-color:var(--verde)}
+.hoja-cab{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hoja-cab .bn{flex:none;width:24px;height:24px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;font-weight:700;display:inline-flex;align-items:center;justify-content:center}
+.dato-f h3{margin:0}
+.dato-v{font-size:1.1rem;font-weight:700;letter-spacing:-.01em;margin:4px 0}
+
+.solo-imprimir{display:none}
+@media print{
+  .solo-imprimir{display:block}
+  #nav,#barrita,footer,.no-imprimir,.nota-lab{display:none!important}
+  body{font-size:12px}
+  main{padding:0;max-width:none}
+  .hoja li{break-inside:avoid}
+  a{text-decoration:none;color:inherit}
+}
+
+.dar{border-top:var(--suave);margin-top:12px;padding-top:12px}
+.sobres:has(.sobre:nth-child(4)){grid-template-columns:repeat(2,1fr)}
+.dar .de100,.dar .de100 *{font-size:.88rem;line-height:1.5}.dar .de100 b{font-size:.88rem}
+/* Lab 3 Pro */
+.pro-modo{margin-top:6px}
+.pro-grid{display:grid;gap:12px;margin-top:12px}
+.pro-grid .calc{margin-top:0}
+.pro-grid.experto{grid-template-columns:1fr}
+@media (min-width:900px){ .pro-grid.experto{grid-template-columns:1fr 1fr} }
+.pro-c .monto em{font-style:normal;font-size:.78rem;color:var(--g600);padding-right:10px;white-space:nowrap}
+.pro-c .chico-monto{width:11rem}
+.explica ul li{margin-bottom:4px}
+.campo.apila{flex-wrap:wrap}.campo.apila>.chips{flex-wrap:wrap}
+.conecta{font-size:.88rem;line-height:1.5;margin:0;padding:8px 10px;border-left:3px solid var(--azul);background:var(--azul-claro);border-radius:0 8px 8px 0}
+.palancas{list-style:none;padding:0;margin:8px 0;display:grid;gap:8px}
+.palancas li{display:grid;grid-template-columns:1fr;gap:3px;border-bottom:var(--suave);padding-bottom:8px}
+.palancas .pt{font-size:.9rem;font-weight:600}
+.palancas .pb{height:8px;background:var(--g200);border-radius:4px;overflow:hidden}
+.palancas .pb i{display:block;height:100%;background:var(--azul);border-radius:4px}
+.palancas .pv{font-size:.95rem;font-weight:700}
+.palancas .pv small{display:block;font-weight:400;color:var(--g600);font-size:.8rem}
+.lecciones{display:grid;gap:8px}
+@media (min-width:760px){.lecciones{grid-template-columns:1fr 1fr}}
+.lecciones .bn{display:inline-flex;width:22px;height:22px;border-radius:50%;background:var(--negro);color:var(--blanco);font-size:12px;align-items:center;justify-content:center;margin-right:4px}
+.campo.apila>.chips{flex:1 1 100%;min-width:0}
+
+/* Pro: cadena "Cómo se conecta todo" */
+.cadena{border:1.5px solid var(--g300);border-radius:12px;padding:14px;margin:8px 0 4px}
+.cad-et{margin:0 0 8px;font-size:.74rem;letter-spacing:.06em;text-transform:uppercase;color:var(--g600);font-weight:600}
+.cad-fila{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.cad-caja{border:1px solid var(--g300);border-radius:8px;padding:8px 10px;min-width:0}
+.cad-caja b{display:block;font-size:.9rem;margin-bottom:2px}
+.cad-caja span{display:block;font-size:.82rem;color:var(--g600);line-height:1.4}
+.cad-flecha{margin:6px 0;text-align:center;color:var(--g600);font-size:1.1rem;line-height:1}
+.cad-cuenta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.cad-cuenta>div{flex:1 1 0;min-width:0;border:1px solid var(--g300);border-radius:8px;padding:8px 10px}
+.cad-cuenta>div:last-child{border-color:var(--azul);background:var(--azul-claro)}
+.cad-cuenta span{display:block;font-size:.78rem;color:var(--g600)}
+.cad-cuenta b{display:block;font-size:.95rem}
+.cad-cuenta i{font-style:normal;font-weight:600;color:var(--g600)}
+.cad-final{border:1.5px solid var(--azul);background:var(--azul-claro);border-radius:10px;padding:10px 12px}
+.cad-final span{display:block;font-size:.8rem;color:var(--g600)}
+.cad-final b{display:block;font-size:1.5rem;color:var(--azul)}
+.cad-final p{margin:4px 0 0}
+.pro-aviso{margin-top:12px}
+@media (max-width:560px){.cad-fila{grid-template-columns:1fr}.cad-cuenta{flex-direction:column;align-items:stretch}.cad-cuenta i{text-align:center}}
+/* Pro: gráfica del dinero y secciones plegables */
+.g-tit{margin:0 0 2px;font-weight:600;font-size:1rem}
+.g-num{font-size:10px;font-weight:700;fill:var(--negro);font-family:inherit}
+.g-pasos{margin:8px 0 0;padding-left:1.4rem;font-size:.9rem;line-height:1.5}
+.g-pasos li{margin-bottom:3px}
+.ter-eq{display:block;margin-bottom:4px;color:var(--negro)}
+.pleg{border:1.5px solid var(--negro);border-radius:10px;margin:10px 0;background:var(--blanco)}
+.pleg>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 16px}
+.pleg>summary::-webkit-details-marker{display:none}
+.pleg>summary b{display:block;font-size:1rem}
+.pleg>summary small{display:block;font-size:.84rem;color:var(--g600);margin-top:1px}
+.pleg>summary i{flex:none;width:22px;height:22px;border:1.5px solid var(--negro);border-radius:50%;position:relative}
+.pleg>summary i::before,.pleg>summary i::after{content:"";position:absolute;left:5px;right:5px;top:50%;height:1.5px;margin-top:-.75px;background:var(--negro)}
+.pleg>summary i::after{transform:rotate(90deg);transition:transform .15s}
+.pleg[open]>summary i::after{transform:rotate(0)}
+.pleg[open]>summary{border-bottom:1px solid var(--g300)}
+.pleg-in{padding:4px 16px 14px}
+.pleg-in>h3:first-child,.pleg-in>p:first-child{margin-top:10px}
+/* Pro: camino del dinero, fuentes y equipo */
+.camino{list-style:none;margin:8px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;position:relative}
+.camino li{position:relative;padding:22px 10px 0 0;min-width:0}
+.camino li::before{content:"";position:absolute;left:0;right:0;top:7px;height:1.5px;background:var(--negro)}
+.camino li:last-child::before{right:auto;width:14px}
+.camino li::after{content:"";position:absolute;left:0;top:1px;width:14px;height:14px;border-radius:50%;background:var(--blanco);border:1.5px solid var(--negro)}
+.camino li.peor::after{background:var(--rojo);border-color:var(--rojo)}
+.camino li.fin::after{background:var(--azul);border-color:var(--azul)}
+.camino li.fin.mal::after{background:var(--rojo);border-color:var(--rojo)}
+.cm-mes{display:block;font-size:.74rem;letter-spacing:.05em;text-transform:uppercase;color:var(--g600);font-weight:600}
+.camino b{display:block;font-size:.98rem;margin:2px 0}
+.cm-txt{display:block;font-size:.85rem;line-height:1.45;color:var(--g600)}
+.camino li.peor b{color:var(--rojo)}.camino li.fin b{color:var(--azul)}
+.fuentes{display:flex;height:22px;border-radius:6px;overflow:hidden;margin-top:6px;border:1px solid var(--negro)}
+.fuentes i{display:block;height:100%}
+.equipo{margin-top:18px;padding:16px 18px;border:1.5px solid var(--negro);border-radius:12px;border-left:6px solid var(--azul)}
+.ter-res{display:block;margin:4px 0 6px;padding:8px 10px;background:var(--azul-claro);border-radius:8px;color:var(--negro)}
+.conecta::before{content:"Para entenderlo, con un ejemplo general";display:block;font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;color:var(--azul);font-weight:600;margin-bottom:3px}
+@media (max-width:620px){
+  .camino{grid-template-columns:1fr}
+  .camino li{padding:0 0 16px 28px}
+  .camino li::before{left:6.5px;right:auto;top:16px;bottom:0;width:1.5px;height:auto}
+  .camino li:last-child::before{display:none}
+  .camino li::after{top:2px}
+}
+
+</style>
+</head>
+<body>
+<nav id="nav" aria-label="Laboratorio 3">
+  <a class="logo" href="https://lab3.umbralgt.com/">( U ) &nbsp; Lab 3 · Finanzas e Inversión</a>
+  <div class="mods"><a class="mod" href="https://lab3.umbralgt.com/escalera/">Escalera financiera</a><a class="mod" href="https://lab3.umbralgt.com/#herramientas">Herramientas</a></div>
+  <a class="volver" href="https://www.umbralgt.com">← umbralgt.com</a>
+</nav>
+<div id="barrita"></div>
+<main id="app" aria-live="polite"><noscript><p>Esta herramienta necesita JavaScript activado en el navegador.</p></noscript></main>
+<footer>
+  <div class="pie-in">
+    <p class="lema">explorar. contrastar. decidir.</p>
+    <p class="per">Per experimentum.</p>
+    <div class="pie-fila"><span>( UMBRAL ) · Lab 3 · Finanzas e Inversión · Ciudad de Guatemala · 2025–2027</span>
+      <a href="https://www.umbralgt.com" target="_blank" rel="noopener"><span>umbralgt.com</span><span aria-hidden="true">↗</span></a></div>
+  </div>
+</footer>
+<script>window.UMBRAL_URLS = {"portada": "https://lab3.umbralgt.com/", "escalera": "https://lab3.umbralgt.com/escalera/", "mes": "https://lab3.umbralgt.com/mi-mes/", "fondo": "https://lab3.umbralgt.com/fondo/", "deudas": "https://lab3.umbralgt.com/deudas/", "proteccion": "https://lab3.umbralgt.com/proteccion/", "metas": "https://lab3.umbralgt.com/metas/", "inversion": "https://lab3.umbralgt.com/inversion/", "vivienda": "https://lab3.umbralgt.com/vivienda/", "resumen": "https://lab3.umbralgt.com/mi-escalera/", "datos": "https://lab3.umbralgt.com/datos/", "pro": "https://lab3.umbralgt.com/pro/", "lab1": "https://lab1.umbralgt.com", "lab2": "https://lab2.umbralgt.com"};</script>
+<script src="/fin-motor.js"></script>
+<script src="/comun.js"></script>
+<script>
+// Lab 3 Pro · Desarrollo inmobiliario: flujo mensual, indicadores, pruebas de estrés y alertas.
+// Dos modos sobre los mismos cálculos: "Aprender mientras calculo" (explica cada cosa y lee tus números) y "Modo experto".
+(function(){
+'use strict';
+const M = window.FinMotor, U = window.U, $app = document.getElementById('app');
+if(!M || !U || !M.desarrollo){ $app.innerHTML = '<p class="aviso"><strong>No se pudo cargar la herramienta.</strong> Revisá tu conexión y volvé a abrir la página.</p>'; return; }
+const Q = U.Q, D = M.DATOS, esc = U.esc, P = (x, d) => x==null || !isFinite(x) ? '—' : M.fmtPct(x, d);
+const TC = D.tipo_cambio.v;
+U.GLOSARIO.push(
+  [/\bTIR\b/, 'TIR', 'Tasa interna de retorno: el rendimiento anual que da un proyecto, tomando en cuenta cuándo entra y cuándo sale cada quetzal.'],
+  [/\bVAN\b/, 'VAN', 'Valor actual neto: lo que vale hoy todo el flujo del proyecto, descontado a la tasa que elegís. Si es positivo, el proyecto rinde más que esa tasa.'],
+  [/absorción/i, 'Absorción', 'Cuántas unidades se venden al mes. Es el dato que más cambia la duración y el riesgo de un proyecto.'],
+  [/exposición máxima/i, 'Exposición máxima', 'El peor momento del proyecto: cuánto dinero propio hay metido a la vez. Es lo que tenés que poder aguantar.'],
+  [/punto de equilibrio/i, 'Punto de equilibrio', 'Cuántas unidades hay que vender para recuperar todo lo invertido, sin ganar ni perder.'],
+  [/edificabilidad|\bIE\b/, 'Índice de edificabilidad', 'Cuántos m² se pueden construir por cada m² de terreno, según la zona G del POT.'],
+  [/eficiencia/i, 'Eficiencia', 'Qué parte de lo construido se puede vender. El resto son pasillos, gradas, muros y áreas comunes.'],
+  [/régimen sobre las utilidades|régimen opcional/i, 'Régimen de ISR', 'Sobre las utilidades: 25% de lo que ganás. Opcional simplificado: 5% y 7% sobre lo que vendés, ganes o no.']
+);
+U.activarGlosario($app);
+
+// ---------- Ejemplos (cambialos por tus números) ----------
+const IEZ = {G1:[1.2,1.8], G2:[1.8,2.7], G3:[2.7,4.0], G4:[4.0,6.0], G5:[6.0,9.0]}; // POT COM-030-08, vía Lab 2 (base y ampliado)
+const comun = {eficiencia:0.82, instalaciones:0, imprevistos:0.05, diseno:0.055, admin:0.055, urbanM2:137, preventaAntes:4, comision:0.04, pagoTerreno:'contado', desembolso:'aLaPar', costoInventario:0.002,
+  ltc:0.6, tasaCredito:0.09, preventaMin:0.3, regimen:'utilidades', descuento:0.12, capital:null,
+  vacancia:0.08, gastosR:0.15, deudaPct:0.6, tasaLP:0.09, plazoLP:15, anios:10, capSalida:D.lab1_caprate.v.C, crecimiento:D.inflacion_interanual.v};
+const EJ = {
+  vp: {nombre:'Vivienda prioritaria', zona:'G3', ref:'un proyecto típico de G3', terNota:'Terreno a US$238 por m², un valor posible para un terreno G3 en la ciudad. Precio al tope de la vivienda prioritaria.', ...comun, unidades:90, m2Unidad:50, plazas:45, sotano:false, cSot:0, m2Terreno:1500, terreno:Math.round(1500*238*TC/1000)*1000, cm2:3435,
+       social:true, mesesTramites:8, mesesObra:18, precioUnidad:D.vp_precio_max.v, descuentoPreventa:0.05, enganche:0.10, absorcion:15, comision:0.03, rentaM2:Math.round(10*TC)},
+  media: {nombre:'Clase media', zona:'G4', ref:'un proyecto típico de G4', terNota:'Terreno a US$573 por m², un valor posible para un terreno G4 sobre un eje. Precio de venta de US$2,100 por m², un poco abajo de lo publicado, porque los precios de oferta se negocian.', ...comun, unidades:80, m2Unidad:60, plazas:80, sotano:true, cSot:Math.round(700*TC), m2Terreno:1200, terreno:Math.round(1200*573*TC/1000)*1000, cm2:4425,
+       social:false, mesesTramites:10, mesesObra:22, precioUnidad:Math.round(60*2100*TC/1000)*1000, descuentoPreventa:0.12, enganche:0.20, absorcion:2.5, rentaM2:Math.round(10*TC)},
+  alta: {nombre:'Clase alta', zona:'G5', ref:'un proyecto típico de G5', terNota:'Terreno a US$1,625 por m², un valor posible para un terreno G5 en las zonas de precio más alto. Precio de venta de US$2,778 por m².', ...comun, unidades:40, m2Unidad:120, plazas:80, sotano:true, cSot:Math.round(700*TC), m2Terreno:1000, terreno:Math.round(1000*1625*TC/1000)*1000, cm2:5955,
+       social:false, mesesTramites:12, mesesObra:26, precioUnidad:Math.round(120*2778*TC/1000)*1000, descuentoPreventa:0.15, enganche:0.30, absorcion:2, rentaM2:Math.round(14*TC)}
+};
+let modo = 'aprender', ejemplo = 'media', propio = false;
+let s = JSON.parse(JSON.stringify(EJ.media));
+try{ const m = localStorage.getItem('umbral-pro-modo'); if(m==='experto' || m==='aprender') modo = m; }catch(e){}
+// Números que llegan del Lab 2 por el fragmento (#zg=G4&at=1200&nu=60&au=70&cm2u=580&teru=900000&pvu=2000&sot=1&pl=60), en dólares como el Lab 2
+(function desdeLab2(){
+  try{
+    const h = new URLSearchParams(location.hash.slice(1)), n = k => { const v = Number(h.get(k)); return h.has(k) && isFinite(v) && v>0 ? v : null; };
+    if(!h.has('nu')) return;
+    propio = true; ejemplo = null;
+    if(/^G[1-5]$/.test(h.get('zg')||'')) s.zona = h.get('zg');
+    if(n('at')) s.m2Terreno = n('at'); if(n('nu')) s.unidades = n('nu'); if(n('au')) s.m2Unidad = n('au');
+    if(n('cm2u')) s.cm2 = Math.round(n('cm2u')*TC); if(n('teru')) s.terreno = Math.round(n('teru')*TC);
+    if(n('pvu')) s.precioUnidad = Math.round(n('pvu')*TC*s.m2Unidad/1000)*1000;
+    if(h.has('sot')) s.sotano = h.get('sot')==='1'; if(n('pl')) s.plazas = n('pl');
+    s.desdeLab2 = true;
+  }catch(e){}
+})();
+
+// ---------- Campos ----------
+const CAMPOS = [
+  {g:'terreno', t:'1 · El terreno y la norma', que:'Lo que dice el POT sobre tu terreno define cuánto podés construir. El terreno se paga al inicio, antes de vender nada: por eso pesa tanto en el riesgo.', conecta:'El terreno se reparte entre las unidades: un terreno de Q3 millones con 60 unidades pesa Q50,000 en cada una; con 90 unidades, Q33,000. Por eso un IE más alto (más unidades en el mismo terreno) puede bajar el precio de cada vivienda. En otros mercados el terreno suele pesar de 6% a 17% de las ventas (BID y NAHB).', f:[
+    {k:'m2Terreno', l:'Área del terreno', u:'m²'}, {k:'terreno', l:'Precio del terreno', u:'Q', ayuda:'Lo que pagás, al inicio del proyecto'}]},
+  {g:'producto', t:'2 · Lo que vas a construir', que:'Cuántas unidades, de qué tamaño y con cuántos parqueos. Las unidades de 50 a 85 m² son las que más se venden; arriba de 100 m² se venden mucho más lento.', conecta:'Cada parqueo en sótano ocupa unos 30 m² que se construyen pero no se venden como vivienda. Con 1 parqueo por unidad de 60 m², el sótano agrega la mitad del área vendible. Por eso el número de parqueos cambia mucho el costo por m² vendible.', f:[
+    {k:'unidades', l:'Unidades', u:''}, {k:'m2Unidad', l:'Tamaño de cada unidad', u:'m²', ayuda:'Lo que se vende, sin pasillos ni áreas comunes'},
+    {k:'plazas', l:'Parqueos', u:''}, {k:'eficiencia', l:'Eficiencia', u:'%', pct:true, av:true, ayuda:'Parte de lo construido que se vende'}]},
+  {g:'costos', t:'3 · Lo que cuesta construir', que:'El costo de obra por m² es el número más grande y el que menos se publica en Guatemala: ponelo con tu presupuesto. A la obra se suman diseño, supervisión e imprevistos.', conecta:'La obra se mide en m² construidos, pero se vende en m² vendibles. Con una eficiencia de 82%, cada m² que vendés obliga a construir 1.22 m². En Estados Unidos la obra es cerca de 64% del precio (NAHB, 2024); si la tuya pasa de 70%, el margen se aprieta.', f:[
+    {k:'cm2', l:'Costo de obra por m²', u:'Q', ayuda:'Rangos publicados: Q2,500 a Q9,500 según acabados'}, {k:'cSot', l:'Costo del sótano por m²', u:'Q', soloSot:true},
+    {k:'instalaciones', l:'Instalaciones aparte', u:'% de obra', pct:true, av:true, ayuda:'Solo si tu costo por m² no las incluye (10 a 15%)'}, {k:'imprevistos', l:'Imprevistos', u:'% de obra', pct:true, av:true},
+    {k:'diseno', l:'Diseño y planificación', u:'% de obra', pct:true, av:true}, {k:'admin', l:'Administración y supervisión', u:'% de obra', pct:true, av:true},
+    {k:'comision', l:'Comercialización', u:'% de ventas', pct:true, av:true}]},
+  {g:'ventas', t:'4 · Tiempos y ventas', que:'El tiempo cuesta tanto como el m²: cada mes de trámites es terreno detenido, y cada mes sin vender es crédito que cobra intereses. La preventa vende más barato, pero trae dinero antes.', conecta:'Un ejemplo: ganar Q1 millón en 2 años no es lo mismo que ganarlo en 4. El margen es igual, pero la TIR baja casi a la mitad, porque tu dinero estuvo atrapado el doble de tiempo. La absorción decide cuánto dura el proyecto.', f:[
+    {k:'precioUnidad', l:'Precio de entrega por unidad', u:'Q', ayuda:'Con IVA incluido'}, {k:'absorcion', l:'Unidades vendidas al mes', u:'', ayuda:'La absorción: el dato que más pesa. Si tenés datos de proyectos vecinos, valen más que cualquier supuesto'},
+    {k:'mesesTramites', l:'Meses de trámites', u:'meses', ayuda:'Licencia, POT y MARN'}, {k:'mesesObra', l:'Meses de obra', u:'meses'},
+    {k:'enganche', l:'Enganche en cuotas durante la obra', u:'% del precio', pct:true}, {k:'descuentoPreventa', l:'Descuento al inicio de la preventa', u:'%', pct:true, av:true},
+    {k:'preventaAntes', l:'Meses de preventa antes de la obra', u:'meses', av:true},
+    {k:'costoInventario', l:'Costo de cada unidad terminada sin vender', u:'% del precio al mes', pct:true, av:true, ayuda:'Mantenimiento, seguro e impuestos mientras espera comprador. Supuesto de UMBRAL'}]},
+  {g:'dinero', t:'5 · El dinero', que:'Cuánto pone el banco, a qué tasa y desde cuándo. Antes del primer desembolso el banco suele pedir el terreno a tu nombre, las licencias aprobadas y un mínimo de preventa: todo lo anterior (terreno, diseño, estudios y licencias) sale de tu bolsillo.', conecta:'El crédito es una palanca: si el proyecto rinde más que la tasa del banco, tu capital gana más; si rinde menos, pierde más. Por eso la TIR de tu capital es más alta que la del proyecto cuando todo sale bien, y cae más rápido cuando algo sale mal.', f:[
+    {k:'ltc', l:'Parte del costo que presta el banco', u:'%', pct:true, ayuda:'Sin contar el terreno'}, {k:'tasaCredito', l:'Tasa del crédito de construcción', u:'% al año', pct:true},
+    {k:'preventaMin', l:'Preventa mínima antes del crédito', u:'% de unidades', pct:true, av:true}, {k:'descuento', l:'Tasa para el VAN', u:'% al año', pct:true, av:true, ayuda:'Lo mínimo que querés ganar'},
+    {k:'capital', l:'Capital propio disponible', u:'Q', ayuda:'Opcional: para saber si te alcanza'}]}
+];
+
+function campoHTML(c){
+  const v = s[c.k], val = v==null ? '' : c.pct ? +(v*100).toFixed(2) : v;
+  if(c.soloSot && !s.sotano) return '';
+  return `<label class="campo pro-c ${c.av && modo==='aprender' ? 'avz' : ''}"><span>${esc(c.l)}${modo==='aprender' && c.ayuda ? ` <small>${U.glosar(c.ayuda)}</small>` : ''}</span>
+    <span class="monto chico-monto">${c.u==='Q' ? '<span>Q</span>' : ''}<input data-k="${c.k}" ${c.pct?'data-pct="1"':''} inputmode="decimal" autocomplete="off" value="${val}" style="${c.u!=='Q'?'padding-left:12px':''}">${c.u && c.u!=='Q' ? `<em>${esc(c.u)}</em>` : ''}</span></label>`;
+}
+function pantalla(){
+  const ie = IEZ[s.zona];
+  $app.innerHTML = `
+    <p class="ceja">Laboratorio 3 · Pro · Para quien evalúa un desarrollo</p>
+    <h1>Desarrollo inmobiliario</h1>
+    <p>${U.glosar('El flujo de un proyecto mes a mes: terreno, trámites, obra, preventa y entrega. Con la TIR, el VAN, cuánto dinero propio necesitás en el peor momento y qué pasa si algo sale peor de lo planeado.')}</p>
+    <div class="nota-lab pro-aviso"><b>Es una prefactibilidad, con fines educativos</b><p class="chico" style="margin:0">Sirve para entender un proyecto y llegar con mejores preguntas. No sustituye a ningún profesional: arquitecto, ingeniero, abogado, notario, contador, asesor financiero ni a un estudio de mercado. Antes de decidir, verificalo con ellos y con tu banco.</p></div>
+    <div class="pro-modo">${U.chips('modo', [['aprender','Aprender mientras calculo'],['experto','Modo experto']], modo, 'Modo')}</div>
+    ${modo==='aprender' ? `<details class="calma" style="margin-top:12px"><summary><b>Antes de empezar</b></summary>
+      <ul class="chico" style="margin:8px 0 0">
+        <li>Si el dinero es tuyo: lo que pongás en el proyecto no debería ser tu fondo de emergencia, tu retiro ni tu casa.</li>
+        <li>¿Cuántos meses aguantarías si las ventas van a la mitad del ritmo? Abajo lo vas a ver con tus números.</li>
+        <li>¿Tus finanzas personales están en orden? <a href="${U.link('escalera')}">La Escalera financiera</a> lo revisa en 5 minutos.</li></ul></details>` : ''}
+    ${s.desdeLab2 ? `<div class="origen"><b>Usamos los números de tu proyecto en el Lab 2.</b> Están convertidos a quetzales a Q${TC.toFixed(2)} por dólar. Completá los tiempos y las ventas.</div>` : ''}
+    <p class="etq" style="margin-top:14px">Empezá con un ejemplo y cambialo por tus números</p>
+    ${U.chips('ej', [['vp','Vivienda prioritaria'],['media','Clase media'],['alta','Clase alta']], propio ? '' : ejemplo, 'Ejemplo')}
+    ${!propio ? `<p class="suave chico" style="margin:6px 0 0">${esc(EJ[ejemplo].nombre)}: ${esc(EJ[ejemplo].ref)}, sin una zona en particular. ${esc(EJ[ejemplo].terNota)} Cada zona tiene partes más caras y más baratas: los números son un punto de partida, no el precio de un lugar. Precios de referencia del Lab 1 y del Lab 2. Son ejemplos, no proyectos reales.</p>` : ''}
+    <div class="pro-grid ${modo}">
+      <section class="calc"><h3 style="margin:0">${CAMPOS[0].t}</h3>${modo==='aprender' ? `<p class="chico suave" style="margin:0">${U.glosar(CAMPOS[0].que)}</p><p class="conecta">${U.glosar(CAMPOS[0].conecta)}</p>` : ''}
+        <label class="campo"><span>Zona G del POT ${modo==='aprender' ? '<small>Para la Ciudad de Guatemala</small>' : ''}</span><select id="p-zona" class="sel">${Object.keys(IEZ).map(z => `<option ${z===s.zona?'selected':''}>${z}</option>`).join('')}</select></label>
+        ${CAMPOS[0].f.map(campoHTML).join('')}
+        <div class="campo apila"><span>Cómo se paga el terreno ${modo==='aprender' ? '<small>Pagarlo con unidades (permuta) baja mucho tu capital inicial</small>' : ''}</span>${U.chips('pt', [['contado','Al inicio'],['diferido','Mitad al empezar la obra'],['permuta','Con unidades']], s.pagoTerreno, 'Pago del terreno')}</div>
+        <p class="chico suave" style="margin:0" id="p-ie"></p></section>
+      ${CAMPOS.slice(1).map(g => `<section class="calc"><h3 style="margin:0">${g.t}</h3>${modo==='aprender' ? `<p class="chico suave" style="margin:0">${U.glosar(g.que)}</p><p class="conecta">${U.glosar(g.conecta)}</p>` : ''}
+        ${g.g==='producto' ? `<div class="campo"><span>¿Parqueos en sótano?</span>${U.chips('sot', [['1','Sí'],['0','No']], s.sotano?1:0, 'Sótano')}</div>
+          <div class="campo"><span>¿Vivienda de interés social? ${modo==='aprender' ? '<small>No paga licencia municipal</small>' : ''}</span>${U.chips('soc', [['1','Sí'],['0','No']], s.social?1:0, 'Interés social')}</div>` : ''}
+        ${g.g==='dinero' ? `<div class="campo apila"><span>Cómo desembolsa el banco ${modo==='aprender' ? '<small>Lo usual es a la par: por cada quetzal de obra, el banco pone su parte y vos la tuya</small>' : ''}</span>${U.chips('des', [['aLaPar','A la par de tu dinero'],['creditoPrimero','Primero el crédito']], s.desembolso || 'aLaPar', 'Desembolso')}</div>
+          <div class="campo apila"><span>Régimen de ISR</span>${U.chips('reg', [['utilidades','25% de utilidades'],['opcional','5% y 7% de ingresos']], s.regimen, 'Régimen')}</div>` : ''}
+        ${modo==='aprender' ? g.f.filter(c => !c.av).map(campoHTML).join('') + (g.f.some(c => c.av) ? `<details class="mas"><summary>Ajustes de ${esc(g.t.slice(4).toLowerCase())}</summary><div style="display:grid;gap:10px;margin-top:8px">${g.f.filter(c => c.av).map(campoHTML).join('')}</div></details>` : '')
+          : g.f.map(campoHTML).join('')}
+      </section>`).join('')}
+    </div>
+    <div id="resultado" aria-live="polite"></div>
+    ${U.notaLab('No es un estudio de factibilidad, un avalúo ni una oferta de inversión. Los supuestos están a la vista y se pueden cambiar. Verificalo con un contador, tu banco y profesionales del proyecto.')}
+    ${U.pie()}`;
+  $app.querySelectorAll('[data-k]').forEach(i => i.addEventListener('input', () => { const v = U.leerNum(i); s[i.dataset.k] = v==null ? null : i.dataset.pct ? v/100 : v; tocado(); dibujar(); }));
+  document.getElementById('p-zona').addEventListener('change', e => { s.zona = e.target.value; tocado(); dibujar(); });
+  U.enlazarChips($app, 'modo', v => { modo = v; try{ localStorage.setItem('umbral-pro-modo', v); }catch(e){} pantalla(); });
+  U.enlazarChips($app, 'ej', v => { ejemplo = v; propio = false; const cap = s.capital; s = JSON.parse(JSON.stringify(EJ[v])); s.capital = cap; pantalla(); });
+  U.enlazarChips($app, 'sot', v => { s.sotano = v==='1'; if(s.sotano && !s.cSot) s.cSot = Math.round(700*TC); tocado(); pantalla(); });
+  U.enlazarChips($app, 'soc', v => { s.social = v==='1'; tocado(); dibujar(); });
+  U.enlazarChips($app, 'reg', v => { s.regimen = v; tocado(); dibujar(); });
+  U.enlazarChips($app, 'pt', v => { s.pagoTerreno = v; tocado(); dibujar(); });
+  U.enlazarChips($app, 'des', v => { s.desembolso = v; tocado(); dibujar(); });
+  dibujar();
+}
+function tocado(){ if(!propio){ propio = true; $app.querySelectorAll('[data-ej]').forEach(b => b.setAttribute('aria-pressed','false')); } }
+
+function valido(){ return ['unidades','m2Unidad','m2Terreno','terreno','cm2','precioUnidad','absorcion','mesesObra'].every(k => s[k]>0) && s.mesesTramites!=null; }
+// Valor residual: lo máximo que se puede pagar por el terreno ganando 25% sobre la inversión antes de ISR (criterio del Tasador del Lab 2)
+function residualTerreno(meta){
+  meta = meta || 0.25; const pt = s.pagoTerreno==='permuta' ? 'contado' : s.pagoTerreno;
+  const rinde = t => { const x = M.desarrollo({...s, terreno:t, pagoTerreno:pt, capital:undefined}); return (x.utilidad + x.costos.isr)/Math.max(1, x.costoAntesISR); };
+  let lo = 0, hi = Math.max(1, s.precioUnidad*s.unidades); if(rinde(0) < meta) return 0;
+  for(let k=0; k<36; k++){ const m = (lo+hi)/2; if(rinde(m) >= meta) lo = m; else hi = m; }
+  return Math.round(lo/1000)*1000;
+}
+function correr(cambios){ return M.desarrollo({...s, ...cambios, capital:undefined}); }
+
+// ---------- Gráfica: el dinero propio y el crédito, mes a mes ----------
+function graficaHTML(r){
+  const caja = r.serie.caja.slice(0, r.mesesTotal+1), n = caja.length - 1, kMin = caja.indexOf(Math.min(...caja));
+  const M2 = v => 'Q' + (Math.abs(v)/1e6).toFixed(1) + ' millones';
+  const credMax = Math.max(0, ...r.serie.credSaldo.slice(0, r.E+1));
+  const enganches = r.serie.ingreso.slice(0, r.E).reduce((a,b)=>a+b,0);
+  const fuentes = [['Tu dinero', r.exposicion, 'var(--negro)'], ['Crédito del banco', credMax, 'var(--azul)'], ['Enganches de compradores', enganches, 'var(--g400)']].filter(f => f[1] > 1);
+  const totF = fuentes.reduce((a,f)=>a+f[1],0) || 1;
+  const hitos = [
+    [`Mes 0 a ${Math.max(0, r.inicioObra - 1)}`, 'Antes de que el banco preste', `Terreno, diseño, estudios y licencias: ${M2(r.predesarrollo)} de tu bolsillo${r.permuta ? ' (el terreno se paga con unidades)' : ''}. Con eso llegás al banco con un proyecto, no solo con números`],
+    [`Mes ${r.inicioObra}`, 'Arranca la obra', s.ltc > 0 ? `${r.esperaPreventa ? `Esperó ${r.esperaPreventa} meses a la preventa mínima. ` : ''}Desde aquí el banco desembolsa por avance de obra${(s.desembolso||'aLaPar')==='aLaPar' ? ', a la par de tu dinero' : ''}` : 'Sin crédito: la obra se paga con tu dinero y los enganches'],
+    [`Mes ${kMin}`, 'El peor momento', `Llegás a tener ${M2(r.exposicion)} metidos. Es lo que tenés que tener disponible`],
+    [`Mes ${n}`, r.utilidad >= 0 ? 'Entregás y cobrás' : 'Entregás y no alcanza', r.utilidad >= 0 ? `Recuperás lo que pusiste y te quedan ${M2(r.utilidad)} de ganancia` : `Perdés ${M2(r.utilidad)}`]];
+  return `<figure class="grafica"><p class="g-tit">El camino de tu dinero</p>
+    <ol class="camino">${hitos.map((h,k) => `<li class="${k===2 ? 'peor' : k===3 ? (r.utilidad>=0 ? 'fin' : 'fin mal') : ''}"><span class="cm-mes">${h[0]}</span><b>${h[1]}</b><span class="cm-txt">${h[2]}</span></li>`).join('')}</ol>
+    <p class="g-tit" style="margin-top:16px">¿Quién pone el dinero antes de entregar?</p>
+    <div class="fuentes" role="img" aria-label="${fuentes.map(f => f[0] + ' ' + Math.round(100*f[1]/totF) + '%').join(', ')}">${fuentes.map(f => `<i style="width:${(100*f[1]/totF).toFixed(1)}%;background:${f[2]}"></i>`).join('')}</div>
+    <ul class="leyenda">${fuentes.map(f => `<li><span class="cu" style="background:${f[2]}"></span>${f[0]}<span class="v">${M2(f[1])} · ${Math.round(100*f[1]/totF)}%</span></li>`).join('')}</ul>
+    ${modo==='aprender' ? `<p class="chico suave" style="margin:6px 0 0">Entre más ponen el banco y los compradores, menos dinero propio necesitás, pero el proyecto depende más de que las ventas salgan.</p>` : ''}
+    ${modo==='experto' ? lineaHTML(r) : ''}</figure>`;
+}
+function lineaHTML(r){
+  const caja = r.serie.caja.slice(0, r.mesesTotal+1), cred = r.serie.credSaldo.slice(0, r.mesesTotal+1), n = caja.length - 1;
+  const W = 360, H = 230, mi = 40, md = 10, ms = 26, mb = 24, mill = v => (v/1e6).toFixed(1);
+  const lo = Math.min(0, ...caja, ...(modo==='experto' ? cred.map(v => -v) : [])), hi = Math.max(0, ...caja);
+  const x = k => mi + (W-mi-md)*k/Math.max(1,n), y = v => ms + (H-ms-mb)*(hi - v)/Math.max(1, hi - lo);
+  const linea = caja.map((v,k) => `${x(k).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+  const abajo = `M${x(0)},${y(0)} ` + caja.map((v,k) => `L${x(k).toFixed(1)},${y(Math.min(0,v)).toFixed(1)}`).join(' ') + ` L${x(n)},${y(0)} Z`;
+  const arriba = `M${x(0)},${y(0)} ` + caja.map((v,k) => `L${x(k).toFixed(1)},${y(Math.max(0,v)).toFixed(1)}`).join(' ') + ` L${x(n)},${y(0)} Z`;
+  const kMin = caja.indexOf(Math.min(...caja)), fin = caja[n], kRec = r.payback!=null && r.payback < n - 1 ? r.payback : null, M2 = v => 'Q' + (v/1e6).toFixed(1) + ' millones';
+  const fases = [[0, r.inicioObra, 'Trámites'], [r.inicioObra, r.E, 'Obra'], [r.E, n, 'Entrega y ventas']].filter(f => f[1] > f[0]);
+  const punto = (k, v, t) => `<circle cx="${x(k)}" cy="${y(v)}" r="9" fill="var(--blanco)" stroke="var(--negro)" stroke-width="1.5"/><text x="${x(k)}" y="${y(v)+3.5}" text-anchor="middle" class="g-num">${t}</text>`;
+  const svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Tu dinero en el proyecto, mes a mes">
+    ${fases.map((f,k) => `<rect x="${x(f[0])}" y="${ms-14}" width="${Math.max(0, x(f[1])-x(f[0]))}" height="${H-mb-ms+14}" fill="${k%2 ? 'var(--g200)' : 'var(--suelo)'}"/>${x(f[1])-x(f[0]) > 46 ? `<text x="${(x(f[0])+x(f[1]))/2}" y="${ms-4}" text-anchor="middle" class="g-ax">${f[2]}</text>` : ''}`).join('')}
+    <line x1="${mi}" x2="${W-md}" y1="${y(0)}" y2="${y(0)}" stroke="var(--negro)" stroke-width="1.2"/>
+    <text x="${mi-5}" y="${y(0)+3}" text-anchor="end" class="g-ax">0</text>
+    <text x="${mi-5}" y="${y(lo)+3}" text-anchor="end" class="g-ax">−${mill(-lo)}</text>
+    ${hi > 0 ? `<text x="${mi-5}" y="${y(hi)+3}" text-anchor="end" class="g-ax">+${mill(hi)}</text>` : ''}
+    <path d="${abajo}" fill="var(--rojo-claro)"/><path d="${arriba}" fill="var(--azul-claro)"/>
+    ${modo==='experto' ? `<polyline points="${cred.map((v,k) => `${x(k).toFixed(1)},${y(-v).toFixed(1)}`).join(' ')}" fill="none" stroke="var(--g600)" stroke-width="1.3" stroke-dasharray="4 3"/>` : ''}
+    <polyline points="${linea}" fill="none" stroke="var(--negro)" stroke-width="2"/>
+    ${punto(kMin, caja[kMin], '1')}${kRec!=null && kRec > kMin ? punto(kRec, 0, '2') : ''}${punto(n, fin, kRec!=null && kRec > kMin ? '3' : '2')}
+    <text x="${mi}" y="${H-6}" class="g-ax">mes 0</text><text x="${W-md}" y="${H-6}" text-anchor="end" class="g-ax">mes ${n}</text>
+    <text x="${mi+(W-mi-md)/2}" y="${H-6}" text-anchor="middle" class="g-ax">millones de quetzales</text></svg>`;
+  const pasos = [`<b>Lo máximo que tenés metido: ${M2(-caja[kMin])}</b>, en el mes ${kMin}. Es el dinero que tenés que tener disponible antes de cobrar.`];
+  if(kRec!=null && kRec > kMin) pasos.push(`<b>Recuperás lo que pusiste</b> en el mes ${kRec}, a medida que se escrituran las unidades.`);
+  pasos.push(fin >= 0 ? `<b>${kRec==null ? 'Recuperás lo que pusiste y te queda' : 'Al final te queda'} ${M2(fin)} de ganancia</b>, en el mes ${n}.${kRec==null ? ' Casi todo el dinero vuelve junto, cuando se entregan y escrituran las unidades.' : ''}` : `<b>Al final perdés ${M2(-fin)}</b>.`);
+  return `<figure class="grafica"><p class="g-tit">Mes a mes</p>
+    <p class="chico suave" style="margin:0 0 6px">Rojo: lo que tenés puesto. Azul: lo que ya ganaste. Punteada: lo que debés al banco.</p>${svg}</figure>`;
+}
+
+function nivelDe(r){
+  const piso = D.bono_cupon.v.a3;
+  if(!(r.utilidad>0)) return ['riesgo','No cierra'];
+  if(r.tirCapital!=null && r.tirCapital >= piso + 0.10 && r.margenVentas >= 0.12) return ['bien','Cierra con holgura'];
+  return ['minimo','Cierra justo'];
+}
+
+function dibujar(){
+  const box = document.getElementById('resultado');
+  const ie = IEZ[s.zona], ieEl = document.getElementById('p-ie');
+  if(!valido()){ box.innerHTML = '<p class="suave" style="margin-top:16px">Completá el terreno, las unidades, los costos, el precio, la absorción y los meses para ver el flujo.</p>'; return; }
+  const r = correr({}), m2c = r.m2c, ieUsado = m2c/s.m2Terreno;
+  const terU = s.terreno/TC, terM2 = terU/Math.max(1, s.m2Terreno);
+  const resid = residualTerreno(), rU = resid/TC;
+  if(ieEl) ieEl.innerHTML = `<span class="ter-eq">Tu terreno: <b>US$${Math.round(terU).toLocaleString('en-US')}</b> · US$${Math.round(terM2).toLocaleString('en-US')} por m² · US$${Math.round(terM2*0.6987).toLocaleString('en-US')} por vara² · Q${Math.round(s.terreno/Math.max(1,m2c)).toLocaleString('en-US')} por cada m² que vas a construir.</span><span class="ter-res">${resid > 0 ? `Con lo que vas a construir y vender, un desarrollador que busca ganar 25% sobre lo que invierte (el criterio del Tasador del Lab 2) podría pagar hasta <b>${Q(resid)}</b> por este terreno: US$${Math.round(rU/Math.max(1,s.m2Terreno)).toLocaleString('en-US')} por m². ${s.terreno > resid ? 'Tu precio está arriba de eso.' : 'Tu precio está abajo de eso.'}` : 'Con estos números, a un desarrollador no le queda nada para pagar el terreno con 25% de ganancia.'} ${modo==='aprender' ? 'Los precios publicados muchas veces incluyen la casa o el edificio que hay encima; quien desarrolla compra el terreno y lo que permite construir.' : ''}</span> ` + U.glosar(`Construirías ${Math.round(m2c).toLocaleString('en-US')} m² sobre el terreno: un IE de ${ieUsado.toFixed(2)}. En ${s.zona}, el POT permite ${ie[0]} de base y ${ie[1]} con incentivos.`) + (ieUsado > ie[1] ? ' <b style="color:var(--rojo)">Pasa del máximo con incentivos.</b>' : ieUsado > ie[0] ? ' Necesitás el escenario con incentivos (Lab 2).' : '');
+  const piso = D.bono_cupon.v.a3, [nv, nvTxt] = nivelDe(r);
+  const est = [
+    ['Tu proyecto', {}], ['Ventas a la mitad del ritmo', {absorcion:s.absorcion/2}], ['Obra 15% más cara', {cm2:s.cm2*1.15, cSot:(s.cSot||0)*1.15}],
+    ['Tasa 3 puntos más alta', {tasaCredito:(s.tasaCredito||0)+0.03}], ['Trámites 6 meses más largos', {mesesTramites:s.mesesTramites+6}], ['Precio 10% más bajo', {precioUnidad:s.precioUnidad*0.9}],
+    ['Todo junto', {absorcion:s.absorcion/2, cm2:s.cm2*1.15, cSot:(s.cSot||0)*1.15, tasaCredito:(s.tasaCredito||0)+0.03, mesesTramites:s.mesesTramites+6, precioUnidad:s.precioUnidad*0.9}]
+  ].map(([t, c]) => [t, c && Object.keys(c).length ? correr(c) : r]);
+  const otro = correr({regimen: s.regimen==='opcional' ? 'utilidades' : 'opcional'});
+  const c = r.costos, partes = [['Terreno', c.terreno], ['Obra e imprevistos', c.obra], ['Diseño y supervisión', c.diseno + c.admin], ['Licencia, MARN y urbanización', c.licencia + c.marn + c.urban],
+    ['Comercialización', c.comision], ['Unidades sin vender', c.inventario], ['Intereses', c.intereses], ['IVA neto', c.iva], ['ISR', c.isr]].filter(p => p[1]>0.5);
+  const tot = partes.reduce((a,p) => a+p[1], 0);
+  const alertas = alertasDe(r, est, ieUsado, ie);
+  box.innerHTML = `
+    <section class="breve">
+      <p class="etq" style="margin-top:0">Tu proyecto <span class="nv nv-${nv}">${nvTxt}</span></p>
+      <p class="lugar">${r.utilidad>0 ? `Ganarías unos <b>${Q(r.utilidad)}</b> en ${r.mesesTotal} meses: ${P(r.margenVentas)} de las ventas.` : `Con estos números el proyecto <b>pierde ${Q(-r.utilidad)}</b>.`}</p>
+      <div class="sobres">
+        <div class="sobre futuro"><span>${U.glosar('TIR de tu capital')}</span><b>${r.tirCapital==null && r.exposicion < 1 ? 'Sin capital' : P(r.tirCapital)}</b><small>${r.tirCapital==null && r.exposicion < 1 ? 'El crédito y los compradores pagan todo' : `Bono del Tesoro: ${P(piso)}`}</small></div>
+        <div class="sobre"><span>${U.glosar('Exposición máxima')}</span><b>${Q(r.exposicion)}</b><small>${s.capital>0 ? (r.exposicion > s.capital ? `Te faltan ${Q(r.exposicion - s.capital)}` : 'Te alcanza tu capital') : 'Dinero propio en el peor mes'}</small></div>
+        <div class="sobre"><span>Ventas totales</span><b>${Q(r.ventas)}</b><small>${r.unidades} unidades · con IVA</small></div>
+      </div>
+      ${graficaHTML(r)}
+      ${modo==='aprender' ? `<div class="explica"><b>Lo que dicen tus números</b>${lecturaHTML(r, est, partes, tot, otro)}</div>` : ''}
+    </section>
+    ${alertas.length ? `<section class="revisor"><h2 style="margin-top:0;border:0;padding:0">Ojo con esto</h2><ul class="chico" style="margin:0">${alertas.map(a => `<li>${a}</li>`).join('')}</ul></section>` : ''}
+    <section class="equipo"><p class="etq" style="margin-top:0">Lo que muchas veces decide el resultado</p>
+      <p class="chico" style="margin:0 0 8px">En un desarrollo, la estructura legal, fiscal y financiera puede pesar tanto o más que el diseño. Muchos proyectos con buena arquitectura se atoran por una promesa de compraventa mal hecha, un régimen de impuestos mal elegido o un crédito que llegó tarde.</p>
+      <ul class="chico" style="margin:0">
+        <li><b>Un buen abogado:</b> la sociedad, la compra del terreno, las promesas de compraventa y el fideicomiso para los enganches.</li>
+        <li><b>Un buen contador y un auditor:</b> el régimen de ISR, el crédito fiscal del IVA y los estados financieros que pide el banco.</li>
+        <li><b>Un buen asesor financiero:</b> cuánto crédito, cuándo y a qué tasa, y cuánto capital conviene tener de reserva.</li></ul>
+      <p class="chico suave" style="margin:8px 0 0">Esta herramienta sirve para llegar a esas conversaciones con mejores preguntas, no para reemplazarlas.</p></section>
+    ${modo==='aprender' ? `<h2>Cómo se conecta todo</h2>${conexionHTML(r)}` : ''}
+    <p class="etq" style="margin-top:28px">Para ver a fondo</p>
+    ${pleg('ind', 'Indicadores', 'TIR, VAN, márgenes, punto de equilibrio y duración', `    <div class="tabla"><table><tbody>
+      ${fila('TIR del proyecto', P(r.tirProyecto), 'El rendimiento anual de todo el proyecto, como si no hubiera crédito. Ejemplo: poner Q100 y recibir Q120 un año después es una TIR de 20%.')}
+      ${fila('TIR de tu capital', P(r.tirCapital), 'El rendimiento de tu dinero, con el crédito del banco. Es la que compara un inversionista.')}
+      ${fila(`VAN al ${P(s.descuento,0)}`, Q(r.van), 'Cuánto vale hoy todo el proyecto si exigís ganar esa tasa. Positivo: rinde más que eso.')}
+      ${fila('Margen bruto', P(r.margenBruto), 'Ventas sin IVA menos terreno y obra. En vivienda social de México y Brasil, de 20% a 42% (BID, 2017).')}
+      ${fila('Margen antes de ISR', P(r.margenAntesISR), 'Lo que queda después de todos los costos e intereses, antes del impuesto. Los constructores de vivienda de Estados Unidos reportan 11% del precio (NAHB, 2024).')}
+      ${fila('Margen neto sobre ventas', P(r.margenVentas), 'Lo que te queda, después de ISR. Las constructoras de vivienda que cotizan en Estados Unidos: 10.5% (NYU Stern, enero 2026).')}
+      ${fila('Peso del terreno', P(r.incidenciaTerreno), 'Terreno sobre ventas. Vivienda social en México y Brasil: 6% en la periferia y 17% en zonas centrales (BID). Estados Unidos: 13.7% (NAHB).')}
+      ${fila('Obra sobre ventas', P(r.directoVentas), 'Obra y urbanización sobre ventas sin IVA. Estados Unidos: 64% (NAHB, 2024).')}
+      ${fila('Costo total por m² vendible', Q(r.costoM2), `Contra un precio de ${Q(r.precioM2)} por m² con IVA.`)}
+      ${fila('Múltiplo de tu capital', r.multiplo ? r.multiplo.toFixed(2)+' veces' : '—', 'Lo que recuperás por cada quetzal que pusiste en el peor momento.')}
+      ${fila('Punto de equilibrio', `${r.equilibrioUnidades} de ${r.nVenta} unidades`, 'Lo que hay que vender para no perder.')}
+      ${fila('Recuperás tu capital en', r.payback!=null ? `el mes ${r.payback}` : '—', 'El mes en que lo que salió de tu bolsillo ya volvió.')}
+      ${fila('Duración', `${r.mesesTotal} meses`, `Obra desde el mes ${r.inicioObra}${r.esperaPreventa ? ` (espera ${r.esperaPreventa} meses la preventa mínima)` : ''}, entrega en el mes ${r.E}, última venta en el mes ${r.ventaFin}.`)}
+      ${r.permuta ? fila('Unidades para el dueño del terreno', `${r.permuta}`, 'Con permuta, el terreno se paga con unidades terminadas en vez de efectivo.') : ''}
+    </tbody></table></div>
+    <p class="suave chico">Referencias de otros mercados, para comparar órdenes de magnitud y no como meta: <a href="https://eyeonhousing.org/2025/01/cost-of-constructing-a-home-in-2024/">Asociación Nacional de Constructores de Vivienda de EE. UU. (NAHB), encuesta de costos 2024</a>; <a href="https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/mgnroc.html">NYU Stern, márgenes por industria (enero 2026)</a>; <a href="https://publications.iadb.org/bitstream/handle/11319/8705/Por_Que_Alli_desarrolladores_Vivienda_Social.PDF?sequence=3">Banco Interamericano de Desarrollo, documento de trabajo 857 (2017)</a>. Cada mercado tiene sus precios, impuestos y crédito.</p>`)}
+    ${modo==='aprender' ? pleg('pal', 'Qué pasa si...', 'Lo que más mueve tu utilidad, una cosa a la vez', `<p class="chico">Las palancas de tu proyecto, de la que más mueve tu utilidad a la que menos. Cada una cambia una sola cosa.</p>${palancasHTML(r)}`) : ''}
+    ${pleg('est', 'Pruebas de estrés', 'Si las ventas, la obra, la tasa o el precio salen peor', `    ${modo==='aprender' ? `<p class="chico">${U.glosar('Lo mismo, pero algo sale peor de lo planeado. Un buen proyecto aguanta un golpe; uno frágil pierde con cualquiera.')}</p>` : ''}
+    <div class="tabla"><table><thead><tr><th>Escenario</th><th class="num">Utilidad</th><th class="num">TIR capital</th><th class="num">Exposición</th><th class="num">Meses</th></tr></thead><tbody>
+      ${est.map(([t, x], k) => `<tr class="${k===0?'destaca':''}"><td>${esc(t)}</td><td class="num" style="${x.utilidad<0?'color:var(--rojo)':''}">${Q(x.utilidad)}</td><td class="num">${P(x.tirCapital)}</td><td class="num">${Q(x.exposicion)}</td><td class="num">${x.mesesTotal}</td></tr>`).join('')}
+    </tbody></table></div>`)}
+    ${pleg('din', 'A dónde se va el dinero', 'Terreno, obra, impuestos e intereses', `    <div class="apilada" role="img" aria-label="Reparto de los costos del proyecto">${partes.map((p,k) => `<i style="width:${(100*p[1]/tot).toFixed(2)}%;background:var(--negro);opacity:${(1 - k*0.11).toFixed(2)}"></i>`).join('')}</div>
+    <ul class="leyenda">${partes.map((p,k) => `<li><span class="cu" style="background:var(--negro);opacity:${(1 - k*0.11).toFixed(2)}"></span>${p[0]}<span class="v">${Q(p[1])} · ${Math.round(100*p[1]/tot)}%</span></li>`).join('')}</ul>`)}
+    ${pleg('isr', '¿Régimen sobre las utilidades o régimen opcional?', 'Cuánto cambia el ISR', `    <p class="chico">${U.glosar(`Con el ${s.regimen==='opcional' ? 'régimen opcional (5% y 7% de lo que vendés)' : 'régimen sobre las utilidades (25% de lo que ganás)'} la utilidad es ${Q(r.utilidad)}. Con el ${s.regimen==='opcional' ? 'régimen sobre las utilidades' : 'régimen opcional'} sería ${Q(otro.utilidad)}.`)} ${modo==='aprender' ? 'El opcional cobra aunque el proyecto pierda; el de utilidades, solo si hay ganancia. La elección depende de la sociedad y de sus otros negocios: es una conversación con tu contador.' : ''}</p>`)}
+    ${pleg('ban', 'Lo que suele pedir el banco antes de prestar', 'Y por qué los primeros gastos salen de tu bolsillo', `
+      <p class="chico">El banco no presta sobre una idea, sino sobre un proyecto que ya tiene forma. Por eso casi todo lo que pasa antes de la obra lo paga quien desarrolla, y el crédito entra cuando ya hay algo concreto. Lo que suele pedir:</p>
+      <ul class="chico">
+        <li><b>El terreno a tu nombre</b> o de tu sociedad, y en garantía (hipoteca) del crédito. Es tu primer aporte.</li>
+        <li><b>El proyecto definido:</b> planos de arquitectura e ingeniería, presupuesto de obra y estudio de factibilidad con el mercado, los costos y el flujo.</li>
+        <li><b>Las licencias aprobadas:</b> de construcción y el instrumento ambiental, antes del primer desembolso de obra.</li>
+        <li><b>Preventa mínima comprobada,</b> muchas veces con los enganches en un fideicomiso o una cuenta que el banco controla.</li>
+        <li><b>Capital propio en riesgo:</b> el banco quiere que tengás dinero metido, para que cobre primero si algo sale mal.</li>
+        <li><b>Una constructora con experiencia</b> y supervisión de la obra: el banco desembolsa por avance, después de verificarlo.</li>
+        <li><b>Seguros:</b> todo riesgo de construcción durante la obra.</li></ul>
+      <p class="chico">En tus números, lo que sale antes de que el banco preste es <b>${Q(r.predesarrollo)}</b>: ${P(r.predesarrollo/Math.max(1, r.costoTotal))} de todo el costo del proyecto, en dinero que todavía no tiene garantía de volver. Es el dinero más difícil de conseguir, y por eso a veces entra un socio o se paga el terreno con unidades.</p>
+      <p class="suave chico">Los requisitos cambian por banco y por proyecto. Es una de las conversaciones para tener con tu asesor financiero.</p>`)}
+    ${pleg('ren', 'Construir para rentar', 'Quedarte con el edificio y crear patrimonio', rentaHTML(r, c))}
+    ${modo==='aprender' ? pleg('lec', 'Cinco ideas para entender un desarrollo', 'Lo esencial, con ejemplos', leccionesHTML()) : ''}
+    ${pleg('reg', 'Lo que ha funcionado en la región', 'Ideas de México, Colombia y Guatemala', estrategiasHTML())}
+    <p class="suave chico">${[D.isr_utilidades, D.isr_opcional, D.licencia_muni, D.marn_instrumento, D.iva_primera_venta, D.bono_cupon, D.lab1_caprate, D.tipo_cambio].map(U.fuente).join('; ')}. Costos de obra y porcentajes: supuestos del Lab 2.</p>`;
+  enlazarRenta(); enlazarPleg();
+}
+const plegEstado = {};
+function pleg(id, t, sub, html){ const abierto = id in plegEstado ? plegEstado[id] : modo==='experto';
+  return `<details class="pleg" data-p="${id}"${abierto ? ' open' : ''}><summary><span><b>${t}</b><small>${sub}</small></span><i aria-hidden="true"></i></summary><div class="pleg-in">${html}</div></details>`; }
+function enlazarPleg(){ $app.querySelectorAll('details.pleg').forEach(d => d.addEventListener('toggle', () => { plegEstado[d.dataset.p] = d.open; })); }
+function fila(t, v, ex){ return `<tr><td>${U.glosar(t)}${modo==='aprender' ? `<br><small class="suave">${esc(ex)}</small>` : ''}</td><td class="num"><b>${v}</b></td></tr>`; }
+
+// Frases que leen los números de la persona
+function lecturaHTML(r, est, partes, tot, otro){
+  const out = [], piso = D.bono_cupon.v.a3;
+  const mayor = partes.slice().sort((a,b) => b[1]-a[1])[0];
+  out.push(`Tu costo más grande es <b>${esc(mayor[0].toLowerCase())}</b>: ${Math.round(100*mayor[1]/tot)}% de todo lo que sale.`);
+  const sens = est.slice(1, 6).map(([t, x]) => [t, r.utilidad - x.utilidad]).sort((a,b) => b[1]-a[1])[0];
+  out.push(`Lo que más golpea tu utilidad es: <b>${esc(sens[0].toLowerCase())}</b> (${Q(sens[1])} menos).`);
+  if(r.tirCapital!=null) out.push(r.tirCapital > piso ? `Tu capital rinde ${P(r.tirCapital)} al año, ${((r.tirCapital - piso)*100).toFixed(1)} puntos más que un Bono del Tesoro sin riesgo. Esa diferencia es lo que te pagan por asumir el riesgo del proyecto.` : `Tu capital rinde menos que un Bono del Tesoro (${P(piso)}), que no tiene riesgo de obra ni de ventas.`);
+  const rapido = correr({absorcion:s.absorcion*2});
+  if(rapido.tirCapital!=null && r.tirCapital!=null && rapido.tirCapital - r.tirCapital > 0.02) out.push(`Si vendieras al doble de ritmo, la TIR de tu capital subiría a ${P(rapido.tirCapital)}: el tiempo pesa tanto como el margen.`);
+  const vendEnObra = r.serie.vendidas.slice(0, r.E).reduce((a,b)=>a+b,0);
+  out.push(`${vendEnObra} de ${r.unidades} unidades se venden antes de la entrega. ${vendEnObra/r.unidades >= 0.6 ? 'La preventa financia buena parte de la obra.' : 'Con poca preventa, la obra se paga casi toda con tu capital y el crédito.'}`);
+  if(Math.abs(otro.utilidad - r.utilidad) > Math.abs(r.utilidad)*0.1 + 1) out.push(`Cambiar de régimen de ISR movería tu utilidad en ${Q(Math.abs(otro.utilidad - r.utilidad))}.`);
+  return `<ul class="chico" style="margin:6px 0 0">${out.map(t => `<li>${U.glosar(t.replace(/<\/?b>/g,'§')).replace(/§([^§]*)§/g,'<strong>$1</strong>')}</li>`).join('')}</ul>`;
+}
+
+function alertasDe(r, est, ieUsado, ie){
+  const a = [], rr = D.rango_que_rota.v;
+  if(s.precioUnidad > rr.max) a.push(`El precio por unidad (${Q(s.precioUnidad)}) está arriba del rango que más se vende en la ciudad (${Q(rr.min)} a ${Q(rr.max)}, 4S Real Estate, T1-2025). Revisá si la absorción que pusiste es realista.`);
+  if(s.m2Unidad > 100) a.push('Las unidades de más de 100 m² se venden mucho más lento que las de 50 a 85 m².');
+  if(ieUsado > ie[1]) a.push(`Lo que querés construir pasa del máximo que permite el POT en ${s.zona} con incentivos.`);
+  const mitad = est.at(1).at(1); if(mitad.utilidad < 0) a.push('Si las ventas van a la mitad del ritmo, el proyecto pierde dinero.');
+  if(mitad.exposicion > r.exposicion*1.25) a.push(`Con ventas a la mitad del ritmo, necesitarías ${Q(mitad.exposicion - r.exposicion)} más de capital propio.`);
+  if(s.capital>0 && r.exposicion > s.capital) a.push(`En el peor mes necesitás ${Q(r.exposicion)} de capital propio y tenés ${Q(s.capital)}.`);
+  if(r.incidenciaTerreno < 0.05 && !r.permuta) a.push(`El terreno pesa ${P(r.incidenciaTerreno)} de tus ventas. En otros mercados suele pesar de 6% a 17%. Si el precio del terreno es bajo para la zona, la utilidad se ve más alta de lo que será.`);
+  if(r.esperaPreventa > 0) a.push(`La obra arranca ${r.esperaPreventa} meses después de terminar los trámites: el banco no desembolsa hasta que esté vendido el ${P(s.preventaMin,0)} de las unidades, y a ${s.absorcion} por mes eso toma hasta el mes ${r.inicioObra}.`);
+  const engDurante = r.serie.ingreso.slice(0, r.E).reduce((x,y)=>x+y,0);
+  if(engDurante > 0) a.push(`Durante la obra entran ${Q(engDurante)} de enganches de compradores. Es dinero de familias que todavía no tienen su vivienda: conviene que vaya a un fideicomiso o a una cuenta que el banco controle, y no usarlo para cubrir huecos de otros proyectos.`);
+  if(s.social && s.precioUnidad > D.vp_precio_max.v) a.push(`Para vivienda prioritaria de la Municipalidad, el precio máximo es ${Q(D.vp_precio_max.v)} (2025).`);
+  if(r.tirCapital!=null && r.tirCapital < D.bono_cupon.v.a3) a.push('Tu capital rinde menos que un Bono del Tesoro sin riesgo.');
+  return a;
+}
+
+// ---------- Cómo se conecta todo: de tus datos a la utilidad y a la TIR ----------
+function conexionHTML(r){
+  const c = r.costos, mill = v => 'Q' + (v/1e6).toFixed(1) + ' millones';
+  const caja = (t, a, b) => `<div class="cad-caja"><b>${t}</b><span>${a}</span><span>${b}</span></div>`;
+  return `<div class="cadena" role="group" aria-label="Cómo tus datos llegan a la utilidad y a la TIR">
+    <p class="cad-et">1 · Lo que escribís</p>
+    <div class="cad-fila">
+      ${caja('Precio y ventas', `${s.unidades} unidades de ${Q(s.precioUnidad)}`, `${s.absorcion} vendidas al mes`)}
+      ${caja('Terreno y obra', `Terreno: ${mill(c.terreno)}`, `Obra: ${mill(c.obra)}`)}
+      ${caja('Tiempo y crédito', `${s.mesesTramites} meses de trámites y ${s.mesesObra} de obra`, `Crédito al ${P(s.tasaCredito,0)}`)}
+    </div>
+    <p class="cad-flecha" aria-hidden="true">↓</p>
+    <p class="cad-et">2 · Lo que resulta</p>
+    <div class="cad-cuenta">
+      <div><span>Ventas</span><b>${mill(r.ventas)}</b></div><i aria-hidden="true">−</i>
+      <div><span>Todos los costos</span><b>${mill(r.costoTotal)}</b></div><i aria-hidden="true">=</i>
+      <div><span>Utilidad</span><b>${mill(r.utilidad)}</b></div>
+    </div>
+    <p class="cad-flecha" aria-hidden="true">↓</p>
+    <p class="cad-et">3 · Lo que decide</p>
+    <div class="cad-final"><span>TIR de tu capital</span><b>${P(r.tirCapital)}</b>
+      <p class="chico">La utilidad, más el tiempo: tu dinero estuvo metido ${r.mesesTotal} meses y en el peor mes llegaste a poner ${mill(r.exposicion)}.</p></div>
+    <p class="suave chico" style="margin:10px 0 0">Dos proyectos con la misma utilidad pueden tener TIR muy distintas: el que devuelve el dinero antes rinde más.</p>
+  </div>`;
+}
+
+// ---------- Qué pasa si: las palancas del proyecto ----------
+function palancasHTML(r){
+  const L = [
+    ['Si el precio sube 5%', {precioUnidad:s.precioUnidad*1.05}],
+    ['Si vendés 20% más rápido', {absorcion:s.absorcion*1.2}],
+    ['Si la obra cuesta 5% menos', {cm2:s.cm2*0.95, cSot:(s.cSot||0)*0.95}],
+    ['Si el terreno cuesta 10% menos', {terreno:s.terreno*0.9}],
+    ['Si los trámites tardan 3 meses menos', {mesesTramites:Math.max(0, s.mesesTramites-3)}],
+    ['Si el enganche sube 10 puntos', {enganche:Math.min(0.9, (s.enganche||0)+0.1)}],
+    ['Si la tasa del crédito baja 1 punto', {tasaCredito:Math.max(0, (s.tasaCredito||0)-0.01)}],
+    ['Si hacés 10% más unidades en el mismo terreno', {unidades:Math.round(s.unidades*1.1), plazas:Math.round((s.plazas||0)*1.1)}],
+    ['Si pagás el terreno con unidades (permuta)', {pagoTerreno:'permuta'}]
+  ].filter(([t, c]) => !(c.pagoTerreno && s.pagoTerreno==='permuta')).map(([t, c]) => { const x = correr(c); return {t, du: x.utilidad - r.utilidad, tir: x.tirCapital, exp: x.exposicion - r.exposicion}; })
+   .sort((a,b) => Math.abs(b.du) - Math.abs(a.du));
+  const max = Math.max(...L.map(l => Math.abs(l.du)), 1);
+  return `<ul class="palancas">${L.map(l => `<li><span class="pt">${esc(l.t)}</span>
+      <span class="pb"><i style="width:${(100*Math.abs(l.du)/max).toFixed(1)}%;${l.du<0?'background:var(--rojo)':''}"></i></span>
+      <span class="pv">${l.du>=0?'+':'−'}${Q(Math.abs(l.du))}<small>TIR capital ${P(l.tir)}${Math.abs(l.exp) > r.exposicion*0.05 ? ` · peor mes ${l.exp<0?'−':'+'}${Q(Math.abs(l.exp))}` : ''}${/rápido/.test(l.t) && l.du<0 ? '. Vendés más unidades con el descuento de preventa: ganás menos, pero corrés menos riesgo.' : ''}${/permuta/.test(l.t) ? '. Entregás unidades en vez de efectivo: necesitás mucho menos capital al inicio.' : ''}</small></span></li>`).join('')}</ul>
+    <p class="chico suave">Hoy, con tus números: utilidad ${Q(r.utilidad)} y TIR de tu capital ${P(r.tirCapital)}. Lo que está arriba es lo que más vale la pena negociar o cuidar.</p>`;
+}
+
+// ---------- Construir para rentar: crear patrimonio ----------
+function costoParaRentar(r){ const c = r.costos; return c.terreno + c.obra + c.diseno + c.admin + c.urban + c.licencia + c.marn + c.intereses; }
+function rentaHTML(r){
+  if(!(s.rentaM2>0)) s.rentaM2 = Math.round(10*TC);
+  const costo = costoParaRentar(r);
+  const p = M.rentaPatrimonio({costo, m2v:r.m2v, rentaM2:s.rentaM2, vacancia:s.vacancia, gastos:s.gastosR, crecimiento:s.crecimiento, deudaPct:s.deudaPct, tasa:s.tasaLP, plazo:s.plazoLP, anios:s.anios, capSalida:s.capSalida});
+  const rentaU = s.rentaM2*s.m2Unidad, ingresoNec = rentaU/0.30, tipico = 6400, sm4 = 4*4252.28;
+  const spread = p.rendimientoCosto - s.capSalida, piso = D.bono_cupon.v.a3;
+  const campo = (k, l, u, pct, ayuda) => `<label class="campo pro-c"><span>${l}${modo==='aprender' && ayuda ? ` <small>${ayuda}</small>` : ''}</span><span class="monto chico-monto">${u==='Q'?'<span>Q</span>':''}<input data-r="${k}" ${pct?'data-pct="1"':''} inputmode="decimal" value="${s[k]==null?'':pct? +(s[k]*100).toFixed(2) : s[k]}" style="${u!=='Q'?'padding-left:12px':''}">${u && u!=='Q' ? `<em>${u}</em>` : ''}</span></label>`;
+  return `
+    ${modo==='aprender' ? `<p>${U.glosar('Vender recupera tu dinero en pocos años. Rentar lo recupera despacio, pero el edificio sigue siendo tuyo y cada año da renta. Así se arma un patrimonio, y así funcionan los fondos inmobiliarios: compran o construyen edificios para rentarlos y reparten esa renta entre muchos inversionistas.')}</p>` : ''}
+    <section class="calc pro-grid ${modo}" style="margin-top:8px">
+      ${campo('rentaM2', 'Renta por m² al mes', 'Q', false, 'Referencia del Lab 1 por zona: Q46 a Q115')}
+      ${campo('vacancia', 'Vacancia', '%', true, 'Meses sin inquilino, en promedio')}
+      ${campo('gastosR', 'Gastos de operación', '% de la renta', true, 'Mantenimiento, administración, seguros')}
+      ${campo('deudaPct', 'Crédito de largo plazo', '% del costo', true, 'Al terminar la obra')}
+      ${campo('tasaLP', 'Tasa del crédito', '% al año', true)}
+      ${campo('plazoLP', 'Plazo del crédito', 'años')}
+      ${campo('anios', 'Años que lo tenés', 'años')}
+      ${campo('capSalida', 'Cap rate para valorar el edificio', '%', true, 'Referencia del Lab 1: 4.32% a 4.76%')}
+    </section>
+    <div class="tabla"><table><tbody>
+      ${fila('Renta por unidad', `${Q(rentaU)} al mes`, 'Lo que pagaría cada familia.')}
+      ${fila('Ingreso que necesita una familia para pagarla', `${Q(ingresoNec)} al mes`, `Si la renta no pasa de 30% del ingreso. El hogar típico gana unos ${Q(tipico)} (BID, 2023).`)}
+      ${fila('Renta neta del primer año', Q(p.noi1), 'Después de vacancia y gastos, antes del crédito.')}
+      ${fila('Rendimiento sobre el costo', P(p.rendimientoCosto), `Renta neta sobre lo que costó construir (${Q(costo)}).`)}
+      ${fila('Valor creado al terminar', Q(p.valorCreado), 'Lo que vale el edificio por su renta menos lo que costó. Si rendís más que el cap rate del mercado, creás valor.')}
+      ${fila('Cobertura de la deuda (DSCR)', p.dscr1 ? p.dscr1.toFixed(2)+' veces' : '—', 'Renta neta sobre la cuota anual del crédito. Debajo de 1, la renta no alcanza para pagarlo.')}
+      ${fila('Lo que te queda el primer año', `${p.filas[0].caja<0?'−':''}${Q(Math.abs(p.filas[0].caja))} · ${P(p.cashOnCash)} de tu capital`, p.filas[0].caja<0 ? 'La renta no alcanza para la cuota: tendrías que poner esa diferencia cada año.' : 'Renta neta menos la cuota del crédito.')}
+      ${fila(`TIR a ${s.anios} años, si vendés el edificio al final`, P(p.tir), 'Incluye la renta de cada año y el valor del edificio al final.')}
+    </tbody></table></div>
+    ${modo==='aprender' ? `<div class="explica"><b>Lo que dicen estos números</b><ul class="chico" style="margin:6px 0 0">
+      <li>${spread > 0 ? `Tu edificio rinde ${P(p.rendimientoCosto)} sobre su costo y el mercado valora la renta a ${P(s.capSalida)}: esa diferencia de ${(spread*100).toFixed(1)} puntos es valor que creás al construir en vez de comprar algo hecho.` : `Tu edificio rinde ${P(p.rendimientoCosto)} sobre su costo, menos que el ${P(s.capSalida)} al que el mercado valora la renta: construirlo para rentar destruye valor con estos números.`}</li>
+      <li>${p.dscr1!=null && p.dscr1 < 1 ? 'La renta no alcanza para pagar el crédito: necesitás menos deuda o más renta.' : p.dscr1!=null && p.dscr1 < 1.25 ? 'La renta cubre el crédito, pero con poco margen: un año con más vacancia te obliga a poner dinero.' : 'La renta cubre el crédito con holgura.'}</li>
+      <li>${ingresoNec <= sm4 ? `Una familia con ingreso de hasta 4 salarios mínimos (${Q(sm4)}) podría pagar esta renta.` : `Esta renta necesita un ingreso de ${Q(ingresoNec)}: arriba de 4 salarios mínimos. Para rentas accesibles, el producto tiene que ser más chico o más barato de construir.`}</li>
+      <li>Vendiendo, la TIR de tu capital es ${P(r.tirCapital)} en ${r.mesesTotal} meses. Rentando, ${P(p.tir)} a ${s.anios} años, pero te quedás con un edificio y con renta cada año.</li></ul></div>
+      <h3 style="margin:18px 0 6px">¿Más renta hace la vivienda más accesible?</h3>
+      <p class="chico">En parte. Un estudio en ciudades de Estados Unidos encontró que los edificios nuevos de apartamentos bajaron entre 5% y 7% las rentas a su alrededor (Asquith, Mast y Reed, 2021). Pero más oferta no basta: para que una familia de ingreso típico pueda rentar, hacen falta unidades más chicas, costos de construcción bajos y capital de largo plazo que acepte rendimientos moderados. Ese capital es el que traen los fondos inmobiliarios.</p>
+      <p class="chico">En México, las FIBRAs (fondos que cotizan en bolsa y reparten la renta de sus inmuebles) ya son 15, con más de 31 millones de m² rentables, cerca de 4.5% del PIB (Monex, 2026). En Guatemala hay fondos de inversión inmobiliarios registrados en la Bolsa de Valores Nacional. El camino suele ser: construir, llenar el edificio de inquilinos, y después venderlo a un fondo o abrirlo a inversionistas para recuperar el capital y construir el siguiente.</p>` : ''}
+    <p class="suave chico">Vacancia y gastos de partida: supuestos del Lab 2. Si el alquiler de vivienda está exento de IVA, el IVA pagado en la obra no se recupera: está incluido en el costo. Verificalo con un contador.</p>`;
+}
+function enlazarRenta(){
+  $app.querySelectorAll('[data-r]').forEach(i => i.addEventListener('change', () => { const v = U.leerNum(i); s[i.dataset.r] = v==null ? null : i.dataset.pct ? v/100 : v; tocado(); dibujar(); }));
+}
+
+// ---------- Cinco ideas para entender un desarrollo ----------
+function leccionesHTML(){
+  const L = [
+    ['El tiempo es dinero, de verdad', 'Ganar Q1 millón con Q5 millones de capital en 2 años es una TIR cercana a 10%; en 4 años, cerca de 5%. Misma utilidad, la mitad del rendimiento.'],
+    ['El banco multiplica, para bien y para mal', 'Si el proyecto rinde 15% y el crédito cuesta 9%, cada quetzal prestado le suma a tu rendimiento. Si el proyecto rinde 5%, cada quetzal prestado te resta.'],
+    ['El peor mes manda', 'La pregunta no es cuánto ganás al final, sino si aguantás el mes en que más dinero tenés metido. Muchos proyectos rentables quiebran ahí.'],
+    ['La preventa es dinero de familias', 'Los enganches financian la obra, pero son ahorros de personas que todavía no tienen su vivienda. Cuidarlos es parte del negocio y de la reputación.'],
+    ['Vender o quedarse', 'Vender recupera rápido el capital; rentar construye patrimonio. Muchos desarrolladores hacen las dos: venden una parte para recuperar capital y se quedan con otra para rentar.']
+  ];
+  return `<div class="lecciones">${L.map(([t, x], k) => `<article class="lugar-g"><h3><span class="bn">${k+1}</span> ${esc(t)}</h3><p class="chico" style="margin:4px 0 0">${esc(x)}</p></article>`).join('')}</div>`;
+}
+
+// ---------- Lo que ha funcionado en la región ----------
+function estrategiasHTML(){
+  const E = [
+    ['Fiducia para la preventa (Colombia)', 'Los pagos de los compradores van a una fiduciaria y solo se entregan al desarrollador cuando el proyecto llega a su punto de equilibrio de ventas. Si no llega, se devuelven. Según Camacol, el 93% de la vivienda que se vende sobre planos usa este mecanismo (2018).'],
+    ['Pagar el terreno con unidades (permuta)', 'El dueño del terreno recibe unidades terminadas en vez de efectivo. Baja mucho el capital inicial y alinea al dueño con el éxito del proyecto. Probalo arriba, en "Cómo se paga el terreno".'],
+    ['Lanzar por etapas', 'Construir una torre o una fase a la vez, y empezar la siguiente cuando la primera se vendió. Reduce el peor mes y deja ajustar el precio con lo aprendido.'],
+    ['Producto para la demanda real con crédito accesible', 'En Guatemala, la vivienda prioritaria (hasta Q361,547) puede venderse con crédito al 5% a 40 años (Mi Primera Casa, con FHA), y reporta ventas de 10 a 30 unidades al mes. En México y Colombia, los subsidios y créditos a la demanda cumplen ese papel.'],
+    ['Construir para rentar y pasar a un fondo', 'En México, las FIBRAs compran edificios ya rentados y devuelven el capital al desarrollador, que puede construir el siguiente. Es el paso que convierte proyectos sueltos en patrimonio y en oferta de renta.']
+  ];
+  return `${E.map(([t, x]) => `<details class="mas" style="border-top:var(--suave);padding:10px 0"><summary>${esc(t)}</summary><p class="chico" style="margin:6px 0 0">${esc(x)}</p></details>`).join('')}
+    <p class="suave chico">Fuentes: <a href="https://www.portafolio.co/negocios/fiducia-la-aliada-de-los-inmobiliarios-517640">Camacol, vía Portafolio (2018)</a>; EMVDU vía República (2026); CHN, Mi Primera Casa; <a href="https://www.monex.com.mx/portal/download/reportes/Inmobiliario%20Monx%202026.pdf">Monex, FIBRAs 2026</a>; <a href="https://www.upjohn.org/research-highlights/new-apartment-buildings-low-income-areas-decrease-nearby-rents">Asquith, Mast y Reed (Upjohn Institute)</a>.</p>`;
+}
+
+pantalla();
+})();
+
+</script>
+</body>
+</html>
